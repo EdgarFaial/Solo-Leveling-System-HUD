@@ -4,70 +4,115 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Solo Leveling System</title>
+  <title>Solo Leveling System | HUD S-Rank</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
+    :root {
+      --system-blue: #00e5ff;
+      --system-blue-glow: rgba(0, 229, 255, 0.6);
+      --bg-deep: #02060a;
+      --panel-bg: rgba(6, 26, 35, 0.9);
+    }
+    
     body {
       margin: 0;
       padding: 0;
-      background-color: #010409;
+      background-color: var(--bg-deep);
       color: #e2e8f0;
       font-family: 'Rajdhani', sans-serif;
-      overflow-x: hidden;
+      overflow: hidden;
       touch-action: manipulation;
     }
-    .system-font {
-      font-family: 'Orbitron', sans-serif;
-    }
-    ::-webkit-scrollbar {
-      width: 0px; 
-    }
-    .system-bg {
-      background: linear-gradient(180deg, rgba(15, 23, 42, 0.95) 0%, rgba(2, 6, 23, 0.98) 100%);
-      backdrop-filter: blur(20px);
-    }
-    @keyframes scanline {
-      0% { transform: translateY(-100%); }
-      100% { transform: translateY(1000%); }
-    }
-    .scanline {
+
+    .system-font { font-family: 'Orbitron', sans-serif; }
+
+    /* HUD Scanlines & Grain */
+    body::before {
+      content: "";
       position: fixed;
-      top: 0; left: 0; width: 100%; height: 2px;
-      background: rgba(0, 229, 255, 0.1);
-      box-shadow: 0 0 10px rgba(0, 229, 255, 0.2);
-      z-index: 1000;
+      inset: 0;
+      background: 
+        linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%),
+        linear-gradient(90deg, rgba(0, 229, 255, 0.02), rgba(0, 229, 255, 0.01), rgba(0, 229, 255, 0.02));
+      background-size: 100% 2px, 3px 100%;
       pointer-events: none;
-      animation: scanline 8s linear infinite;
+      z-index: 2000;
     }
-    .no-scrollbar::-webkit-scrollbar {
-      display: none;
+
+    /* Bordas Chanfradas Oficiais */
+    .cut-corners {
+      clip-path: polygon(
+        0 12px, 12px 0, 
+        calc(100% - 12px) 0, 100% 12px, 
+        100% calc(100% - 12px), calc(100% - 12px) 100%, 
+        12px 100%, 0 calc(100% - 12px)
+      );
     }
-    .no-scrollbar {
-      -ms-overflow-style: none;
-      scrollbar-width: none;
+
+    .system-panel {
+      background: var(--panel-bg);
+      backdrop-filter: blur(15px);
+      border: 1px solid rgba(0, 229, 255, 0.4);
+      box-shadow: 
+        inset 0 0 15px rgba(0, 229, 255, 0.1),
+        0 0 30px rgba(0, 0, 0, 0.5);
     }
-    @media (max-width: 640px) {
-      .tab-label { display: none; }
+
+    .glow-text {
+      text-shadow: 0 0 10px var(--system-blue-glow);
     }
+
+    @keyframes pulse-cyan {
+      0%, 100% { opacity: 0.8; box-shadow: 0 0 10px var(--system-blue-glow); }
+      50% { opacity: 1; box-shadow: 0 0 25px var(--system-blue); }
+    }
+
+    .progress-fill {
+      position: relative;
+      overflow: hidden;
+    }
+    .progress-fill::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+      animation: shine 3s infinite;
+    }
+    @keyframes shine {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(100%); }
+    }
+
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    
+    /* Glitch Effect */
+    @keyframes glitch {
+      0% { transform: translate(0); }
+      20% { transform: translate(-2px, 2px); }
+      40% { transform: translate(-2px, -2px); }
+      60% { transform: translate(2px, 2px); }
+      80% { transform: translate(2px, -2px); }
+      100% { transform: translate(0); }
+    }
+    .glitch-hover:hover { animation: glitch 0.3s infinite; }
+
   </style>
-<script type="importmap">
-{
-  "imports": {
-    "react": "https://esm.sh/react@^19.2.3",
-    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
-    "react/": "https://esm.sh/react@^19.2.3/",
-    "@google/genai": "https://esm.sh/@google/genai@^1.35.0",
-    "lucide-react": "https://esm.sh/lucide-react@^0.562.0"
+  <script type="importmap">
+  {
+    "imports": {
+      "react": "https://esm.sh/react@^19.2.3",
+      "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+      "react/": "https://esm.sh/react@^19.2.3/",
+      "@google/genai": "https://esm.sh/@google/genai@^1.35.0",
+      "lucide-react": "https://esm.sh/lucide-react@^0.562.0"
+    }
   }
-}
-</script>
+  </script>
 <link rel="stylesheet" href="/index.css">
 </head>
 <body>
-  <div class="scanline"></div>
   <div id="root"></div>
-  <!-- O script abaixo é essencial para carregar a aplicação React -->
   <script type="module" src="index.tsx"></script>
 <script type="module" src="/index.tsx"></script>
 </body>

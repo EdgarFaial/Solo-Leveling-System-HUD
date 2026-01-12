@@ -1,71 +1,63 @@
 
 import { GoogleGenAI, Type } from "@google/genai";
 
-// Inicialização segura
 const getAIClient = () => {
-  return new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
+  return new GoogleGenAI({ apiKey: process.env.API_KEY });
 };
 
-export async function getArchitectMessage(context: string): Promise<string> {
+export async function getArchitectAnalysis(context: string): Promise<string> {
   try {
     const ai = getAIClient();
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
-      contents: `You are 'The Architect', the cold, authoritative entity behind the System in Solo Leveling. 
-      The User is a 'Player' who just did the following: ${context}.
-      Respond with a short, cryptic, and motivating system message (max 2 sentences). 
-      Use a tone that implies they are just a pawn but have potential. Start with [SYSTEM MESSAGE].`,
+      contents: `VOCÊ É 'O ARQUITETO'. Um sistema de otimização biológica frio e técnico.
+      CONTEXTO: A unidade biológica realizou a seguinte ação: ${context}.
+      DIRETRIZ: Analise se isso contribui para a remoção de ineficiência ou se é um desperdício de potencial humano.
+      TOM: Autoritário, objetivo, sem emoção. Máximo 100 caracteres.
+      PREFIXO OBRIGATÓRIO: [ANÁLISE DE SISTEMA].`,
       config: {
-        temperature: 0.8,
-        maxOutputTokens: 100,
+        temperature: 0.1,
       }
     });
-    return response.text || "[SYSTEM] Connection established. Continue your growth.";
+    return response.text || "[SISTEMA] Eficiência nominal detectada.";
   } catch (error) {
-    console.error("Architect failed to respond:", error);
-    return "[SYSTEM] Data sync error. Proceed with caution.";
+    return "[SISTEMA] Falha na telemetria crítica.";
   }
 }
 
-export async function generateSecretQuest(): Promise<{ title: string; description: string; target: number }> {
+export async function generateAdaptiveQuest(stats: any): Promise<any> {
   try {
     const ai = getAIClient();
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
-      contents: `Generate a 'Secret Quest' for a leveling system. 
-      It should be something real-world achievable but presented in fantasy RPG terms.
-      Example: 'Shadow Step' (Walk 5000 steps).`,
+      contents: `Com base nos status: ${JSON.stringify(stats)}, gere uma INTERVENÇÃO DE EMERGÊNCIA para corrigir a maior fraqueza.
+      Se INT é baixo: Missão de leitura técnica.
+      Se VIT é baixo: Missão de higiene do sono/hidratação.
+      Se STR é baixo: Missão de resistência física.
+      Retorne JSON estrito.`,
       config: {
         responseMimeType: "application/json",
         responseSchema: {
           type: Type.OBJECT,
           properties: {
-            title: {
-              type: Type.STRING,
-              description: 'The title of the secret quest.',
-            },
-            description: {
-              type: Type.STRING,
-              description: 'The description of the secret quest.',
-            },
-            target: {
-              type: Type.NUMBER,
-              description: 'The numeric target for completion.',
-            }
+            title: { type: Type.STRING },
+            description: { type: Type.STRING },
+            category: { type: Type.STRING },
+            target: { type: Type.NUMBER },
+            reward: { type: Type.STRING }
           },
-          required: ["title", "description", "target"],
+          required: ["title", "description", "category", "target", "reward"],
         }
       }
     });
-    const jsonStr = response.text?.trim();
-    if (!jsonStr) throw new Error("Empty response from AI");
-    return JSON.parse(jsonStr);
+    return JSON.parse(response.text || '{}');
   } catch (error) {
-    console.error("Failed to generate secret quest:", error);
     return {
-      title: "Shadow Training",
-      description: "Push your limits in the dark.",
-      target: 100
+      title: "Recalibração Muscular",
+      description: "Realize 20 repetições de esforço físico imediato.",
+      category: "physical",
+      target: 20,
+      reward: "Correção de Atrofia"
     };
   }
 }

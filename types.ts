@@ -1,22 +1,29 @@
 
 export interface Stats {
   playerName: string;
+  age: number;
+  goal: string;
+  job: string; 
+  title: string; 
   level: number;
   exp: number;
   maxExp: number;
-  hp: number;
+  hp: number; 
   maxHp: number;
-  mp: number;
-  maxMp: number;
-  strength: number;
-  agility: number;
-  sense: number;
-  vitality: number;
-  intelligence: number;
-  will: number;
+  focusCapacity: number; 
+  maxFocusCapacity: number;
+  fatigue: number; 
+  strength: number; 
+  agility: number; 
+  sense: number; 
+  vitality: number; 
+  intelligence: number; 
+  will: number; 
   unallocatedPoints: number;
-  gold: number;
+  gold: number; 
 }
+
+export type QuestCategory = 'FÍSICO' | 'RECUPERAÇÃO' | 'COGNITIVO' | 'CONTROLE' | 'BIOHACKING';
 
 export interface Quest {
   id: string;
@@ -24,39 +31,40 @@ export interface Quest {
   description: string;
   progress: number;
   target: number;
-  type: 'daily' | 'normal' | 'secret' | 'urgent';
-  category?: 'physical' | 'recovery' | 'focus' | 'control' | 'system';
+  type: 'daily' | 'intervention' | 'secret' | 'penalty';
+  category: QuestCategory;
   completed: boolean;
   reward: string;
   goldReward: number;
   expReward: number;
 }
 
+export interface Skill {
+  id: string;
+  name: string;
+  level: number;
+  type: 'COGNITIVA' | 'MOTORA' | 'SOCIAL' | 'ESTRATÉGICA';
+  description: string;
+  requirement: string;
+  efficiencyBonus: string;
+  isUnlocked: boolean;
+  testTask: string;
+  testTarget: number;
+}
+
 export interface Item {
   id: string;
   name: string;
-  rank: 'E' | 'D' | 'C' | 'B' | 'A' | 'S';
-  type: 'weapon' | 'armor' | 'consumable' | 'material';
+  rank: string;
+  type: 'suplemento' | 'hardware' | 'ferramenta' | 'especial';
   description: string;
   icon: string;
   price?: number;
 }
 
-export interface Skill {
-  id: string;
-  name: string;
-  level: number;
-  manaCost: number;
-  type: 'active' | 'passive';
-  description: string;
-  requirements: string;
-}
+export type SystemTab = 'STATUS' | 'PROTOCOLS' | 'INVENTORY' | 'SKILLS' | 'SHOP';
 
-export type SystemTab = 'STATUS' | 'QUEST' | 'INVENTORY' | 'SKILLS' | 'SHOP';
-
-export type Rank = 'E' | 'D' | 'C' | 'B' | 'A' | 'S';
-
-export function calculateRank(level: number): Rank {
+export function calculateRank(level: number): string {
   if (level >= 95) return 'S';
   if (level >= 80) return 'A';
   if (level >= 60) return 'B';
@@ -65,33 +73,26 @@ export function calculateRank(level: number): Rank {
   return 'E';
 }
 
-export function calculateCombatPower(stats: Stats): number {
-  return (
-    stats.strength * 20 +
-    stats.agility * 15 +
-    stats.vitality * 12 +
-    stats.intelligence * 25 +
-    stats.sense * 10 +
-    stats.will * 30 +
-    stats.level * 150
-  );
-}
-
 export const INITIAL_STATS: Stats = {
   playerName: "",
+  age: 0,
+  goal: "",
+  job: "Unidade em Avaliação",
+  title: "Aspirante",
   level: 1,
   exp: 0,
   maxExp: 100,
   hp: 100,
   maxHp: 100,
-  mp: 50,
-  maxMp: 50,
-  strength: 1,
-  agility: 1,
-  sense: 1,
-  vitality: 1,
-  intelligence: 1,
-  will: 1,
-  unallocatedPoints: 5,
-  gold: 0
+  focusCapacity: 100,
+  maxFocusCapacity: 100,
+  fatigue: 0,
+  strength: 10,
+  agility: 10,
+  sense: 10,
+  vitality: 10,
+  intelligence: 10,
+  will: 10,
+  unallocatedPoints: 0,
+  gold: 500
 };

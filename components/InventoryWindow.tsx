@@ -1,7 +1,8 @@
 
 import React from 'react';
 import { Item } from '../types';
-import { Backpack, Info, Lock } from 'lucide-react';
+// Fix: Consolidate lucide-react imports at the top
+import { Backpack, Info, Lock, Zap, Package } from 'lucide-react';
 
 interface InventoryWindowProps {
   items: Item[];
@@ -9,61 +10,59 @@ interface InventoryWindowProps {
 
 const InventoryWindow: React.FC<InventoryWindowProps> = ({ items }) => {
   return (
-    <div className="space-y-6 animate-in fade-in zoom-in duration-300">
-      <div className="flex items-center justify-between border-b border-white/5 pb-4">
-        <h2 className="system-font text-gray-400 text-xl flex items-center gap-3">
-          <Backpack size={26} />
-          ARMAZÉM DIMENSIONAL
+    <div className="space-y-6 animate-in fade-in zoom-in-95 duration-500">
+      <div className="flex items-center justify-between border-b border-white/10 pb-4">
+        <h2 className="system-font text-gray-400 text-xl flex items-center gap-3 italic">
+          <Backpack size={24} className="text-cyan-500" />
+          Armazém Dimensional
         </h2>
-        <span className="text-[10px] text-gray-600 font-bold uppercase tracking-[0.2em]">{items.length} / 50 ESPAÇOS</span>
+        <div className="text-right">
+          <span className="text-[8px] text-gray-600 font-black uppercase tracking-widest">Capacidade</span>
+          <div className="text-[10px] text-cyan-500 font-black">{items.length} / 50</div>
+        </div>
       </div>
 
       {items.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-32 text-gray-700">
-          <div className="w-24 h-24 rounded-full border-2 border-dashed border-gray-800/30 flex items-center justify-center mb-6">
-            <Backpack size={48} className="opacity-10" />
-          </div>
-          <p className="italic text-sm tracking-widest uppercase font-bold opacity-30">Vazio. Complete missões para obter espólios.</p>
+        <div className="flex flex-col items-center justify-center py-32 opacity-20">
+          <Package size={64} strokeWidth={1} />
+          <p className="mt-4 text-[10px] font-black tracking-widest uppercase italic">Nenhum objeto detectado no plano dimensional.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-4">
+        <div className="grid grid-cols-4 sm:grid-cols-6 gap-3">
           {items.map((item, idx) => (
-            <div key={`${item.id}-${idx}`} className="aspect-square system-bg border border-white/5 rounded-2xl p-3 group relative cursor-pointer hover:border-[#00e5ff]/40 transition-all flex items-center justify-center shadow-lg">
-              <div className="text-4xl transform group-hover:scale-110 transition-transform">
+            <div key={`${item.id}-${idx}`} className="aspect-square system-panel cut-corners group relative cursor-pointer hover:border-cyan-400 transition-all flex items-center justify-center bg-gradient-to-br from-white/5 to-transparent">
+              <span className="text-3xl filter drop-shadow-[0_0_8px_rgba(255,255,255,0.2)] group-hover:scale-110 transition-transform">
                 {item.icon}
-              </div>
-              <div className={`absolute top-2 right-2 text-[8px] font-black px-1.5 rounded-sm border shadow-sm ${
-                item.rank === 'S' ? 'border-red-500 text-red-500 bg-red-500/10' :
-                item.rank === 'A' ? 'border-yellow-500 text-yellow-500 bg-yellow-500/10' :
-                'border-[#00e5ff] text-[#00e5ff] bg-[#00e5ff]/10'
+              </span>
+              
+              <div className={`absolute top-1 right-1 text-[7px] font-black px-1 rounded-sm border ${
+                item.rank === 'S' ? 'border-red-500 text-red-500' : 'border-cyan-500 text-cyan-400'
               }`}>
                 {item.rank}
               </div>
-              
-              {/* Tooltip Detalhado no Hover */}
-              <div className="absolute inset-0 bg-black/95 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center p-3 text-center pointer-events-none z-20 rounded-2xl border border-[#00e5ff]/30">
-                <span className="text-[10px] font-black text-[#00e5ff] mb-1 uppercase tracking-tighter">{item.name}</span>
-                <span className="text-[8px] text-gray-500 line-clamp-2 leading-tight uppercase font-bold">{item.type}</span>
-                <div className="mt-2 w-full h-px bg-white/10"></div>
-                <span className="text-[8px] text-gray-400 mt-2 leading-tight">{item.description}</span>
+
+              {/* Tooltip HUD no Hover */}
+              <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-32 system-panel cut-corners p-2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 border-cyan-500">
+                <div className="text-[8px] font-black text-cyan-400 uppercase tracking-tighter mb-1 truncate">{item.name}</div>
+                <div className="text-[7px] text-gray-500 uppercase leading-none truncate">{item.type}</div>
               </div>
             </div>
           ))}
-          {/* Slots vazios visuais */}
-          {Array.from({ length: Math.max(0, 12 - items.length) }).map((_, i) => (
-            <div key={`empty-${i}`} className="aspect-square bg-black/20 border border-white/5 rounded-2xl opacity-20 flex items-center justify-center">
-               <Lock size={12} className="text-gray-800" />
+          {/* Slots Vazios */}
+          {Array.from({ length: 12 }).map((_, i) => (
+            <div key={`empty-${i}`} className="aspect-square system-panel cut-corners opacity-10 flex items-center justify-center">
+              <div className="w-1 h-1 bg-cyan-500 rounded-full"></div>
             </div>
           ))}
         </div>
       )}
 
-      <div className="mt-12 bg-[#00e5ff]/5 border border-[#00e5ff]/10 p-5 rounded-2xl flex gap-4 items-start">
-        <Info className="text-[#00e5ff]/60 shrink-0 mt-0.5" size={20} />
-        <div className="space-y-1">
-          <p className="text-[10px] font-black text-[#00e5ff] uppercase tracking-widest">Aviso de Armazenamento</p>
-          <p className="text-[11px] text-gray-500 leading-relaxed uppercase font-bold opacity-80">
-            A capacidade de armazenamento é vinculada à sua Inteligência. Itens de Rank A ou superior são selados automaticamente.
+      <div className="system-panel cut-corners p-4 border-cyan-500/20 bg-cyan-500/5 flex gap-4 items-start">
+        <Zap className="text-cyan-500/60 mt-1" size={16} />
+        <div>
+          <span className="text-[9px] font-black text-cyan-500 tracking-widest uppercase">Nota de Operação</span>
+          <p className="text-[10px] text-gray-500 font-bold uppercase italic leading-tight mt-1">
+            Objetos retirados do inventário serão materializados instantaneamente no plano físico.
           </p>
         </div>
       </div>

@@ -1,7 +1,7 @@
 
 import React from 'react';
-import { Stats, calculateCombatPower } from '../types';
-import { Shield, Zap, Eye, Brain, Dumbbell, Activity, Plus, Trophy } from 'lucide-react';
+import { Stats, calculateRank } from '../types';
+import { Shield, Zap, Eye, Brain, Dumbbell, Plus, BarChart3, Info } from 'lucide-react';
 
 interface StatusWindowProps {
   stats: Stats;
@@ -9,112 +9,134 @@ interface StatusWindowProps {
 }
 
 const StatusWindow: React.FC<StatusWindowProps> = ({ stats, onAllocate }) => {
-  const combatPower = calculateCombatPower(stats);
-  
   const attributes = [
-    { key: 'strength', label: 'FORÇA', icon: Dumbbell, color: 'text-red-400' },
-    { key: 'agility', label: 'AGILIDADE', icon: Zap, color: 'text-yellow-400' },
-    { key: 'vitality', label: 'VITALIDADE', icon: Shield, color: 'text-blue-400' },
-    { key: 'intelligence', label: 'INTELIGÊNCIA', icon: Brain, color: 'text-purple-400' },
-    { key: 'sense', label: 'PERCEPÇÃO', icon: Eye, color: 'text-green-400' },
+    { key: 'strength', label: 'FORÇA', icon: Dumbbell },
+    { key: 'agility', label: 'AGILIDADE', icon: Zap },
+    { key: 'vitality', label: 'VITALIDADE', icon: Shield },
+    { key: 'intelligence', label: 'INTELIGÊNCIA', icon: Brain },
+    { key: 'sense', label: 'SENTIDOS', icon: Eye },
+    { key: 'will', label: 'VONTADE', icon: BarChart3 },
   ];
 
+  const getFatigueColor = (val: number) => {
+    if (val > 80) return 'bg-red-500 shadow-[0_0_10px_#ef4444]';
+    if (val > 50) return 'bg-yellow-500 shadow-[0_0_10px_#f59e0b]';
+    return 'bg-cyan-400 shadow-[0_0_10px_#00e5ff]';
+  };
+
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-5 duration-500">
+    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-10 duration-700">
       
-      {/* Combat Power HUD */}
-      <div className="system-bg p-8 border-2 border-[#00e5ff]/40 rounded-sm relative overflow-hidden group">
-        <div className="absolute top-0 right-0 p-6 opacity-5 rotate-12">
-          <Trophy size={100} className="text-[#00e5ff]" />
+      {/* Anime Status Header */}
+      <div className="relative p-6 system-panel cut-corners border-l-4 border-cyan-400">
+        <div className="absolute top-2 left-4 text-[10px] font-black text-cyan-400 tracking-[0.5em] uppercase opacity-70 italic">
+          [ STATUS ]
         </div>
-        <div className="relative z-10 flex flex-col items-center justify-center py-4">
-          <h3 className="system-font text-[11px] text-[#00e5ff] tracking-[0.5em] font-black mb-4 uppercase opacity-60">Poder de Combate Atual</h3>
-          <div className="flex items-baseline gap-4">
-            <span className="text-6xl font-black system-font text-white drop-shadow-[0_0_20px_rgba(255,255,255,0.2)]">
-              {combatPower.toLocaleString()}
-            </span>
-            <span className="text-lg text-[#00e5ff] font-black tracking-widest uppercase">CP</span>
-          </div>
-          <div className="w-full max-w-[200px] h-[1px] bg-gradient-to-r from-transparent via-[#00e5ff]/30 to-transparent mt-6"></div>
-        </div>
-      </div>
-
-      {/* Vital Indicators */}
-      <div className="space-y-6 system-bg p-6 border border-white/5 rounded-sm shadow-xl">
-        <div className="space-y-2">
-          <div className="flex justify-between text-[11px] font-black tracking-[0.3em] uppercase">
-            <span className="text-red-500">Vitalidade (HP)</span>
-            <span className="text-white">{stats.hp} / {stats.maxHp}</span>
-          </div>
-          <div className="h-3 bg-black/60 rounded-sm overflow-hidden border border-white/5 p-[1px]">
-            <div 
-              className="h-full bg-gradient-to-r from-red-800 to-red-500 shadow-[0_0_15px_rgba(239,68,68,0.4)] transition-all duration-1000" 
-              style={{width: `${(stats.hp/stats.maxHp)*100}%`}}
-            ></div>
-          </div>
-        </div>
-        <div className="space-y-2">
-          <div className="flex justify-between text-[11px] font-black tracking-[0.3em] uppercase">
-            <span className="text-blue-500">Energia (MP)</span>
-            <span className="text-white">{stats.mp} / {stats.maxMp}</span>
-          </div>
-          <div className="h-3 bg-black/60 rounded-sm overflow-hidden border border-white/5 p-[1px]">
-            <div 
-              className="h-full bg-gradient-to-r from-blue-800 to-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.4)] transition-all duration-1000" 
-              style={{width: `${(stats.mp/stats.maxMp)*100}%`}}
-            ></div>
-          </div>
-        </div>
-        <div className="space-y-2">
-          <div className="flex justify-between text-[11px] font-black tracking-[0.3em] uppercase text-cyan-400">
-            <span>Experiência (EXP)</span>
-            <span>{Math.round((stats.exp/stats.maxExp)*100)}%</span>
-          </div>
-          <div className="h-2 bg-black/60 rounded-full overflow-hidden border border-white/5">
-            <div 
-              className="h-full bg-cyan-400 shadow-[0_0_10px_#22d3ee] transition-all duration-500" 
-              style={{width: `${(stats.exp/stats.maxExp)*100}%`}}
-            ></div>
-          </div>
-        </div>
-      </div>
-
-      {/* Atributos Matriz */}
-      <div className="system-bg p-6 border border-white/5 space-y-6">
-        <div className="flex justify-between items-center mb-6">
-          <h3 className="system-font text-xs text-gray-500 tracking-[0.4em] font-black uppercase">Atributos de Portador</h3>
-          {stats.unallocatedPoints > 0 && (
-            <div className="bg-[#00e5ff]/10 text-[#00e5ff] px-4 py-2 font-black animate-pulse rounded-sm border border-[#00e5ff]/30 text-[10px] tracking-widest">
-              {stats.unallocatedPoints} PONTOS DISPONÍVEIS
+        
+        <div className="grid grid-cols-2 gap-4 mt-4">
+          <div className="space-y-3">
+            <div>
+              <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-0.5">Nome:</div>
+              <div className="system-font text-2xl font-black text-white glow-text italic tracking-tighter">{stats.playerName}</div>
             </div>
-          )}
+            <div>
+              <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-0.5">Classe:</div>
+              <div className="text-sm font-black text-cyan-400 uppercase tracking-widest">{stats.job}</div>
+            </div>
+          </div>
+          <div className="space-y-3 text-right">
+            <div>
+              <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-0.5">Nível:</div>
+              <div className="system-font text-3xl font-black text-white glow-text italic">{stats.level}</div>
+            </div>
+            <div>
+              <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-0.5">Título:</div>
+              <div className="text-sm font-black text-cyan-400 uppercase tracking-widest">{stats.title}</div>
+            </div>
+          </div>
         </div>
-        <div className="grid grid-cols-1 gap-4">
+      </div>
+
+      {/* Resource Bars Section */}
+      <div className="grid grid-cols-1 gap-4">
+        <div className="system-panel cut-corners p-4 space-y-4">
+          {/* HP Bar */}
+          <div className="space-y-1">
+            <div className="flex justify-between items-center text-[10px] font-black tracking-widest uppercase">
+              <span className="text-red-500">HP (Integridade)</span>
+              <span className="text-white">{stats.hp} / {stats.maxHp}</span>
+            </div>
+            <div className="h-4 bg-black/60 border border-white/5 p-0.5 cut-corners">
+              <div className="h-full bg-red-600 progress-fill shadow-[0_0_10px_#dc2626]" style={{ width: `${(stats.hp / stats.maxHp) * 100}%` }}></div>
+            </div>
+          </div>
+          
+          {/* MP Bar (Focus) */}
+          <div className="space-y-1">
+            <div className="flex justify-between items-center text-[10px] font-black tracking-widest uppercase">
+              <span className="text-cyan-400">MP (Foco)</span>
+              <span className="text-white">{stats.focusCapacity} / {stats.maxFocusCapacity}</span>
+            </div>
+            <div className="h-4 bg-black/60 border border-white/5 p-0.5 cut-corners">
+              <div className="h-full bg-cyan-500 progress-fill shadow-[0_0_10px_#00e5ff]" style={{ width: `${(stats.focusCapacity / stats.maxFocusCapacity) * 100}%` }}></div>
+            </div>
+          </div>
+
+          {/* Fatigue Meter */}
+          <div className="space-y-1">
+            <div className="flex justify-between items-center text-[10px] font-black tracking-widest uppercase">
+              <span className="text-gray-400">Fadiga</span>
+              <span className={stats.fatigue > 70 ? 'text-red-500 animate-pulse' : 'text-white'}>{stats.fatigue}%</span>
+            </div>
+            <div className="h-2 bg-black/60 border border-white/5 p-0.5 cut-corners">
+              <div className={`h-full progress-fill ${getFatigueColor(stats.fatigue)}`} style={{ width: `${stats.fatigue}%` }}></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Stats Table - High Density */}
+      <div className="system-panel cut-corners p-6 relative">
+         <div className="absolute top-2 right-4 text-[8px] font-black text-gray-600 tracking-widest uppercase italic">
+          Atributos Biométricos
+        </div>
+        
+        <div className="grid grid-cols-1 gap-2 mt-4">
           {attributes.map((attr) => (
-            <div key={attr.key} className="flex items-center justify-between p-5 bg-black/40 border border-white/5 rounded-sm group hover:border-[#00e5ff]/20 transition-all">
-              <div className="flex items-center gap-5">
-                <div className={`p-3 rounded-lg bg-white/5 ${attr.color}`}>
-                  <attr.icon size={22} />
-                </div>
-                <div>
-                  <span className="text-[10px] font-black tracking-[0.2em] text-gray-500 uppercase block mb-1">{attr.label}</span>
-                  <div className="text-[8px] text-gray-700 font-bold uppercase tracking-widest">Nível de Sincro</div>
-                </div>
+            <div key={attr.key} className="flex items-center justify-between p-3 border-b border-white/5 last:border-0 hover:bg-cyan-400/5 transition-colors group">
+              <div className="flex items-center gap-4">
+                <attr.icon size={16} className="text-cyan-400 group-hover:scale-110 transition-transform" />
+                <span className="text-xs font-black text-gray-400 group-hover:text-white transition-colors tracking-widest">{attr.label}</span>
               </div>
-              <div className="flex items-center gap-8">
-                <span className="system-font text-3xl font-black text-white group-hover:text-[#00e5ff] transition-colors">{(stats as any)[attr.key]}</span>
+              <div className="flex items-center gap-4">
+                <span className="system-font text-2xl font-black text-white italic">{(stats as any)[attr.key]}</span>
                 {stats.unallocatedPoints > 0 && (
                   <button 
                     onClick={() => onAllocate(attr.key)}
-                    className="w-10 h-10 flex items-center justify-center border-2 border-[#00e5ff]/50 text-[#00e5ff] hover:bg-[#00e5ff] hover:text-black hover:scale-110 active:scale-90 transition-all shadow-[0_0_15px_rgba(0,229,255,0.2)]"
+                    className="w-7 h-7 flex items-center justify-center bg-cyan-400 text-black cut-corners hover:bg-white active:scale-90 transition-all shadow-[0_0_10px_rgba(0,229,255,0.4)]"
                   >
-                    <Plus size={20} />
+                    <Plus size={16} strokeWidth={4} />
                   </button>
                 )}
               </div>
             </div>
           ))}
         </div>
+
+        {stats.unallocatedPoints > 0 && (
+          <div className="mt-6 p-3 bg-cyan-400/10 border border-cyan-400/30 text-center cut-corners animate-pulse">
+            <span className="text-[10px] font-black text-cyan-400 tracking-[0.3em] uppercase">
+              {stats.unallocatedPoints} Pontos para Distribuição
+            </span>
+          </div>
+        )}
+      </div>
+
+      <div className="flex items-center gap-3 p-4 system-panel cut-corners opacity-40 bg-black/40">
+        <Info size={16} className="text-cyan-400 shrink-0" />
+        <p className="text-[9px] font-bold text-gray-500 uppercase italic leading-tight">
+          O sistema monitora constantemente a integridade da unidade. O excesso de fadiga ativará protocolos de repressão.
+        </p>
       </div>
     </div>
   );
