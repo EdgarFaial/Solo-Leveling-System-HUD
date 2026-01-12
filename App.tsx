@@ -12,7 +12,9 @@ import {
   Trophy, 
   Activity,
   Plus,
-  ShieldAlert
+  ShieldAlert,
+  Share2,
+  Settings
 } from 'lucide-react';
 import StatusWindow from './components/StatusWindow';
 import QuestWindow from './components/QuestWindow';
@@ -52,7 +54,6 @@ const App: React.FC = () => {
   }, [stats, inventory, quests, isAwakened]);
 
   const generateDailyQuests = useCallback((level: number) => {
-    const rank = calculateRank(level);
     const m = level * 0.2 + 1;
     return [
       {
@@ -73,7 +74,7 @@ const App: React.FC = () => {
         title: 'Sincronização de Energia',
         description: 'Hidratação e repouso. O sistema exige equilíbrio biótico.',
         progress: 0,
-        target: 2, // 2 Litros ou ações
+        target: 2, 
         type: 'daily' as const,
         category: 'recovery' as const,
         completed: false,
@@ -86,7 +87,7 @@ const App: React.FC = () => {
         title: 'Foco do Monarca',
         description: 'Realize uma sessão de Deep Work (trabalho focado) sem distrações.',
         progress: 0,
-        target: Math.floor(25 * m), // minutos
+        target: Math.floor(25 * m), 
         type: 'daily' as const,
         category: 'focus' as const,
         completed: false,
@@ -133,7 +134,6 @@ const App: React.FC = () => {
     }));
     setNotification({ msg: `[EVOLUÇÃO] NÍVEL ${level + 1} ALCANÇADO. VOCÊ ESTÁ SE TORNANDO ALGO MAIS.`, type: 'level-up' });
     
-    // Atualizar missões diárias com novos targets
     setQuests(prev => {
       const existingIds = prev.map(q => q.id);
       const newDailies = generateDailyQuests(level + 1).filter(d => !existingIds.includes(d.id));
@@ -176,6 +176,27 @@ const App: React.FC = () => {
     }
   };
 
+  const handleShare = async () => {
+    const cp = calculateCombatPower(stats);
+    const rank = calculateRank(stats.level);
+    const text = `[SISTEMA SOLO LEVELING]\n\nJogador: ${stats.playerName}\nRank: ${rank} | Nível: ${stats.level}\nPoder de Combate: ${cp.toLocaleString()} CP\n\nDesperte seu poder também: ${window.location.href}`;
+    
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'Meu Status de Monarca',
+          text: text,
+          url: window.location.href,
+        });
+      } catch (err) {
+        console.error("Erro ao compartilhar:", err);
+      }
+    } else {
+      navigator.clipboard.writeText(text);
+      setNotification({ msg: "STATUS COPIADO PARA A ÁREA DE TRANSFERÊNCIA!", type: 'default' });
+    }
+  };
+
   const finalizeTraining = useCallback(() => {
     if (!trainingStat) return;
     setStats(prev => {
@@ -214,7 +235,7 @@ const App: React.FC = () => {
             </div>
             <button 
               onClick={() => handleAwakening((document.getElementById('name-input') as HTMLInputElement).value)}
-              className="w-full bg-[#00e5ff] text-black font-black py-6 tracking-[0.6em] text-sm uppercase shadow-[0_0_30px_rgba(0,229,255,0.4)] hover:brightness-125 transition-all"
+              className="w-full bg-[#00e5ff] text-black font-black py-6 tracking-[0.6em] text-sm uppercase shadow-[0_0_30_rgba(0,229,255,0.4)] hover:brightness-125 transition-all"
             >
               INICIAR
             </button>
@@ -228,23 +249,31 @@ const App: React.FC = () => {
     <div className="min-h-screen bg-[#010409] text-white flex flex-col font-['Rajdhani']">
       
       {/* Header Fixo */}
-      <header className="sticky top-0 z-50 system-bg border-b border-[#00e5ff]/20 px-6 py-6 flex items-center justify-between shadow-2xl backdrop-blur-xl">
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 border-2 border-[#00e5ff]/40 rounded-xl flex items-center justify-center bg-black/60 shadow-[0_0_15px_rgba(0,229,255,0.2)]">
-            <User className="text-[#00e5ff]" size={24} />
+      <header className="sticky top-0 z-50 system-bg border-b border-[#00e5ff]/20 px-4 py-4 flex items-center justify-between shadow-2xl backdrop-blur-xl">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 border-2 border-[#00e5ff]/40 rounded-xl flex items-center justify-center bg-black/60">
+            <User className="text-[#00e5ff]" size={20} />
           </div>
           <div>
-            <h2 className="system-font text-[11px] text-[#00e5ff] tracking-[0.3em] font-black leading-none mb-1 uppercase">{stats.playerName}</h2>
-            <div className="flex items-center gap-2">
-              <span className="text-[10px] text-gray-500 font-black">LV.{stats.level}</span>
-              <div className="h-1 w-1 bg-gray-700 rounded-full"></div>
-              <span className="text-[10px] text-[#00e5ff] font-bold tracking-widest uppercase">RANK {calculateRank(stats.level)}</span>
+            <h2 className="system-font text-[10px] text-[#00e5ff] tracking-[0.2em] font-black leading-none mb-1 uppercase truncate max-w-[80px]">{stats.playerName}</h2>
+            <div className="flex items-center gap-1">
+              <span className="text-[9px] text-gray-500 font-black">LV.{stats.level}</span>
+              <span className="text-[9px] text-[#00e5ff] font-bold uppercase">RANK {calculateRank(stats.level)}</span>
             </div>
           </div>
         </div>
-        <div className="flex items-center gap-4 bg-yellow-500/10 px-4 py-2 rounded-xl border border-yellow-500/20">
-          <Coins size={16} className="text-yellow-500" />
-          <span className="text-yellow-500 font-black system-font text-base tracking-tighter">{stats.gold.toLocaleString()}G</span>
+        
+        <div className="flex items-center gap-2">
+          <button 
+            onClick={handleShare}
+            className="p-2.5 rounded-lg bg-white/5 border border-white/10 text-gray-400 hover:text-[#00e5ff] hover:border-[#00e5ff]/40 transition-all active:scale-90"
+          >
+            <Share2 size={18} />
+          </button>
+          <div className="flex items-center gap-2 bg-yellow-500/10 px-3 py-1.5 rounded-lg border border-yellow-500/20">
+            <Coins size={14} className="text-yellow-500" />
+            <span className="text-yellow-500 font-black system-font text-sm">{stats.gold.toLocaleString()}G</span>
+          </div>
         </div>
       </header>
 
@@ -289,9 +318,6 @@ const App: React.FC = () => {
                    <Zap size={12} className="text-[#00e5ff]" />
                    <span className="text-[10px] text-[#00e5ff] font-black uppercase tracking-widest">Custo: {s.cost}</span>
                 </div>
-                <div className="absolute top-0 right-0 p-2 opacity-5 group-hover:opacity-20 transition-opacity">
-                   <Swords size={60} />
-                </div>
               </div>
             ))}
           </div>
@@ -314,12 +340,7 @@ const App: React.FC = () => {
           >
             <t.icon size={26} className={activeTab === t.id ? 'animate-pulse' : ''} />
             <span className="text-[9px] font-black system-font tracking-widest uppercase">{t.label}</span>
-            {activeTab === t.id && (
-              <>
-                <div className="absolute -top-1 w-8 h-[2px] bg-[#00e5ff] animate-pulse"></div>
-                <div className="w-1.5 h-1.5 rounded-full bg-[#00e5ff] mt-1 shadow-[0_0_10px_#00e5ff]"></div>
-              </>
-            )}
+            {activeTab === t.id && <div className="w-1.5 h-1.5 rounded-full bg-[#00e5ff] mt-1 shadow-[0_0_10px_#00e5ff]"></div>}
           </button>
         ))}
       </nav>
