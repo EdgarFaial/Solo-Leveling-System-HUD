@@ -3,7 +3,7 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Solo Leveling System | HUD S-Rank</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -12,7 +12,7 @@
       --system-blue: #00e5ff;
       --system-blue-glow: rgba(0, 229, 255, 0.6);
       --bg-deep: #02060a;
-      --panel-bg: rgba(6, 26, 35, 0.9);
+      --panel-bg: rgba(6, 26, 35, 0.85);
     }
     
     body {
@@ -21,81 +21,75 @@
       background-color: var(--bg-deep);
       color: #e2e8f0;
       font-family: 'Rajdhani', sans-serif;
-      overflow: hidden;
+      overflow: hidden; /* Impede o scroll no body para usar o scroll interno do app */
+      height: 100vh;
+      width: 100vw;
       touch-action: manipulation;
     }
 
     .system-font { font-family: 'Orbitron', sans-serif; }
 
-    /* HUD Scanlines & Grain */
+    /* HUD Scanlines */
     body::before {
       content: "";
       position: fixed;
       inset: 0;
       background: 
         linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%),
-        linear-gradient(90deg, rgba(0, 229, 255, 0.02), rgba(0, 229, 255, 0.01), rgba(0, 229, 255, 0.02));
-      background-size: 100% 2px, 3px 100%;
+        linear-gradient(90deg, rgba(0, 229, 255, 0.01), rgba(0, 229, 255, 0), rgba(0, 229, 255, 0.01));
+      background-size: 100% 3px, 5px 100%;
       pointer-events: none;
       z-index: 2000;
+      opacity: 0.5;
     }
 
-    /* Bordas Chanfradas Oficiais */
     .cut-corners {
       clip-path: polygon(
-        0 12px, 12px 0, 
-        calc(100% - 12px) 0, 100% 12px, 
-        100% calc(100% - 12px), calc(100% - 12px) 100%, 
-        12px 100%, 0 calc(100% - 12px)
+        0 14px, 14px 0, 
+        calc(100% - 14px) 0, 100% 14px, 
+        100% calc(100% - 14px), calc(100% - 14px) 100%, 
+        14px 100%, 0 calc(100% - 14px)
       );
     }
 
     .system-panel {
       background: var(--panel-bg);
-      backdrop-filter: blur(15px);
-      border: 1px solid rgba(0, 229, 255, 0.4);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(0, 229, 255, 0.3);
       box-shadow: 
-        inset 0 0 15px rgba(0, 229, 255, 0.1),
-        0 0 30px rgba(0, 0, 0, 0.5);
+        inset 0 0 15px rgba(0, 229, 255, 0.05),
+        0 0 40px rgba(0, 0, 0, 0.6);
     }
 
     .glow-text {
-      text-shadow: 0 0 10px var(--system-blue-glow);
+      text-shadow: 0 0 12px var(--system-blue-glow);
     }
 
     @keyframes pulse-cyan {
-      0%, 100% { opacity: 0.8; box-shadow: 0 0 10px var(--system-blue-glow); }
-      50% { opacity: 1; box-shadow: 0 0 25px var(--system-blue); }
+      0%, 100% { box-shadow: 0 0 10px var(--system-blue-glow); }
+      50% { box-shadow: 0 0 30px var(--system-blue); }
     }
 
     .progress-fill {
       position: relative;
       overflow: hidden;
     }
+    
     .progress-fill::after {
       content: "";
       position: absolute;
       inset: 0;
-      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-      animation: shine 3s infinite;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+      animation: shine 2.5s infinite;
     }
+
     @keyframes shine {
-      0% { transform: translateX(-100%); }
-      100% { transform: translateX(100%); }
+      0% { transform: translateX(-150%); }
+      100% { transform: translateX(150%); }
     }
 
     .no-scrollbar::-webkit-scrollbar { display: none; }
-    
-    /* Glitch Effect */
-    @keyframes glitch {
-      0% { transform: translate(0); }
-      20% { transform: translate(-2px, 2px); }
-      40% { transform: translate(-2px, -2px); }
-      60% { transform: translate(2px, 2px); }
-      80% { transform: translate(2px, -2px); }
-      100% { transform: translate(0); }
-    }
-    .glitch-hover:hover { animation: glitch 0.3s infinite; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
   </style>
   <script type="importmap">

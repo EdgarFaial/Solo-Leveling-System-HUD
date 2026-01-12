@@ -3,6 +3,7 @@ export interface Stats {
   playerName: string;
   age: number;
   goal: string;
+  customGoal?: string;
   job: string; 
   title: string; 
   level: number;
@@ -23,12 +24,13 @@ export interface Stats {
   gold: number; 
 }
 
-export type QuestCategory = 'FÍSICO' | 'RECUPERAÇÃO' | 'COGNITIVO' | 'CONTROLE' | 'BIOHACKING';
+export type QuestCategory = 'FÍSICO' | 'RECUPERAÇÃO' | 'COGNITIVO' | 'CONTROLE' | 'BIOHACKING' | 'SOCIAL';
 
 export interface Quest {
   id: string;
   title: string;
   description: string;
+  protocol: string;
   progress: number;
   target: number;
   type: 'daily' | 'intervention' | 'secret' | 'penalty';
@@ -37,6 +39,13 @@ export interface Quest {
   reward: string;
   goldReward: number;
   expReward: number;
+  measurableAction: string;
+  timeCommitment: string;
+  biologicalBenefit: string;
+  adaptationLogic: string;
+  estimatedTime?: string;
+  patternCorrection?: string;
+  competenceDeveloped?: string;
 }
 
 export interface Skill {
@@ -50,19 +59,31 @@ export interface Skill {
   isUnlocked: boolean;
   testTask: string;
   testTarget: number;
+  testUnit: string;
+}
+
+export interface ResourceItem {
+  id: string;
+  name: string;
+  category: 'infraestrutura' | 'ferramenta' | 'biológico';
+  description: string;
+  icon: string;
+  isIntegrated: boolean;
+  bonus: string;
 }
 
 export interface Item {
   id: string;
   name: string;
   rank: string;
-  type: 'suplemento' | 'hardware' | 'ferramenta' | 'especial';
+  type: string;
   description: string;
   icon: string;
   price?: number;
+  effect?: (stats: Stats) => Stats;
 }
 
-export type SystemTab = 'STATUS' | 'PROTOCOLS' | 'INVENTORY' | 'SKILLS' | 'SHOP';
+export type SystemTab = 'STATUS' | 'PROTOCOLS' | 'RESOURCES' | 'SKILLS' | 'INVENTORY' | 'SHOP';
 
 export function calculateRank(level: number): string {
   if (level >= 95) return 'S';
@@ -73,11 +94,19 @@ export function calculateRank(level: number): string {
   return 'E';
 }
 
+export function getJobTitle(level: number): string {
+  if (level >= 50) return 'Monarca da Ordem';
+  if (level >= 30) return 'Otimizador de Elite';
+  if (level >= 15) return 'Desperto do Fluxo';
+  if (level >= 5) return 'Unidade Vinculada';
+  return 'Humano em Avaliação';
+}
+
 export const INITIAL_STATS: Stats = {
   playerName: "",
   age: 0,
-  goal: "",
-  job: "Unidade em Avaliação",
+  goal: "PERFORMANCE FÍSICA",
+  job: "Humano em Avaliação",
   title: "Aspirante",
   level: 1,
   exp: 0,
@@ -87,12 +116,12 @@ export const INITIAL_STATS: Stats = {
   focusCapacity: 100,
   maxFocusCapacity: 100,
   fatigue: 0,
-  strength: 10,
-  agility: 10,
-  sense: 10,
-  vitality: 10,
-  intelligence: 10,
-  will: 10,
+  strength: 1,
+  agility: 1,
+  sense: 1,
+  vitality: 1,
+  intelligence: 1,
+  will: 1,
   unallocatedPoints: 0,
-  gold: 500
+  gold: 0
 };
