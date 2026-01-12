@@ -1,10 +1,14 @@
 
 import { GoogleGenAI, Type } from "@google/genai";
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+// Inicialização segura
+const getAIClient = () => {
+  return new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
+};
 
 export async function getArchitectMessage(context: string): Promise<string> {
   try {
+    const ai = getAIClient();
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
       contents: `You are 'The Architect', the cold, authoritative entity behind the System in Solo Leveling. 
@@ -23,9 +27,9 @@ export async function getArchitectMessage(context: string): Promise<string> {
   }
 }
 
-// Updated with responseSchema and improved error handling
 export async function generateSecretQuest(): Promise<{ title: string; description: string; target: number }> {
   try {
+    const ai = getAIClient();
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
       contents: `Generate a 'Secret Quest' for a leveling system. 

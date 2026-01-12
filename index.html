@@ -21,7 +21,7 @@
       font-family: 'Orbitron', sans-serif;
     }
     ::-webkit-scrollbar {
-      width: 0px; /* Hide scrollbar for mobile feel */
+      width: 0px; 
     }
     .system-bg {
       background: linear-gradient(180deg, rgba(15, 23, 42, 0.95) 0%, rgba(2, 6, 23, 0.98) 100%);
@@ -47,7 +47,6 @@
       -ms-overflow-style: none;
       scrollbar-width: none;
     }
-    /* Mobile-specific adjustments */
     @media (max-width: 640px) {
       .tab-label { display: none; }
     }
@@ -68,6 +67,8 @@
 <body>
   <div class="scanline"></div>
   <div id="root"></div>
+  <!-- O script abaixo é essencial para carregar a aplicação React -->
+  <script type="module" src="index.tsx"></script>
 <script type="module" src="/index.tsx"></script>
 </body>
 </html>
