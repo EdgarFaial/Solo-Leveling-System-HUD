@@ -1,0 +1,8 @@
+
+{
+  "name": "Solo Leveling System HUD",
+  "description": "A fully functional RPG system interface inspired by Solo Leveling, featuring status management, daily quests, inventory, and AI-powered interactions with 'The Architect'.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
