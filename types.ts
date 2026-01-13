@@ -22,6 +22,42 @@ export interface Stats {
   will: number; 
   unallocatedPoints: number;
   gold: number; 
+  profile: 'INTROVERTIDO' | 'FOCO_BAIXO' | 'PROCRASTINADOR' | 'RESISTENCIA_LIMITADA' | 'GERAL';
+  preferredTrainingTime: 'morning' | 'afternoon' | 'evening';
+  availableHoursPerDay: number;
+  fitnessLevel: 'beginner' | 'intermediate' | 'advanced';
+  systemMode: 'architect' | 'custom';
+  lastDailyUpdate?: string;
+  avatar?: string;
+}
+
+export interface Item {
+  id: string;
+  name: string;
+  icon: string;
+  rank: string;
+  type: string;
+}
+
+export interface AvailableItem {
+  id: string;
+  name: string;
+  category: 'diário' | 'academia' | 'instrumento' | 'smartwatch' | 'app' | 'espaço';
+  description: string;
+  owned: boolean;
+  missionBonus: string;
+  statBonus?: { stat: keyof Stats; value: number };
+  icon: string;
+}
+
+export interface ResourceItem {
+  id: string;
+  name: string;
+  category: string;
+  description: string;
+  isIntegrated: boolean;
+  icon: string;
+  bonus: string;
 }
 
 export type QuestCategory = 'FÍSICO' | 'RECUPERAÇÃO' | 'COGNITIVO' | 'CONTROLE' | 'BIOHACKING' | 'SOCIAL';
@@ -43,9 +79,10 @@ export interface Quest {
   timeCommitment: string;
   biologicalBenefit: string;
   adaptationLogic: string;
-  estimatedTime?: string;
-  patternCorrection?: string;
-  competenceDeveloped?: string;
+  estimatedTime: string;
+  patternCorrection: string;
+  competenceDeveloped: string;
+  isUserCreated?: boolean;
 }
 
 export interface Skill {
@@ -60,30 +97,10 @@ export interface Skill {
   testTask: string;
   testTarget: number;
   testUnit: string;
+  isDynamic?: boolean; 
 }
 
-export interface ResourceItem {
-  id: string;
-  name: string;
-  category: 'infraestrutura' | 'ferramenta' | 'biológico';
-  description: string;
-  icon: string;
-  isIntegrated: boolean;
-  bonus: string;
-}
-
-export interface Item {
-  id: string;
-  name: string;
-  rank: string;
-  type: string;
-  description: string;
-  icon: string;
-  price?: number;
-  effect?: (stats: Stats) => Stats;
-}
-
-export type SystemTab = 'STATUS' | 'PROTOCOLS' | 'RESOURCES' | 'SKILLS' | 'INVENTORY' | 'SHOP';
+export type SystemTab = 'STATUS' | 'PROTOCOLS' | 'SKILLS' | 'INVENTORY' | 'REGISTRY' | 'CHAT';
 
 export function calculateRank(level: number): string {
   if (level >= 95) return 'S';
@@ -105,7 +122,8 @@ export function getJobTitle(level: number): string {
 export const INITIAL_STATS: Stats = {
   playerName: "",
   age: 0,
-  goal: "PERFORMANCE FÍSICA",
+  goal: "EVOLUÇÃO TOTAL",
+  profile: 'GERAL',
   job: "Humano em Avaliação",
   title: "Aspirante",
   level: 1,
@@ -123,5 +141,10 @@ export const INITIAL_STATS: Stats = {
   intelligence: 1,
   will: 1,
   unallocatedPoints: 0,
-  gold: 0
+  gold: 0,
+  preferredTrainingTime: 'morning',
+  availableHoursPerDay: 1,
+  fitnessLevel: 'beginner',
+  systemMode: 'architect',
+  avatar: '👤'
 };
