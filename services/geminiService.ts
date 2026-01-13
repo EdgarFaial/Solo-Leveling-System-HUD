@@ -3,7 +3,8 @@ import { GoogleGenAI, Type } from "@google/genai";
 import { Stats, AvailableItem, Quest } from "../types";
 
 const getAIClient = () => {
-  return new GoogleGenAI({ apiKey: process.env.API_KEY });
+  // Chave de API inserida diretamente para funcionamento em ambiente de produção/browser
+  return new GoogleGenAI({ apiKey: 'AIzaSyBG8lcJlk0zS1719in_0x9P6b5iYDH-evM' });
 };
 
 const QUEST_SCHEMA = {
@@ -36,7 +37,7 @@ export async function chatWithArchitect(stats: Stats, message: string, history: 
       MENSAGEM DA UNIDADE: ${message}`,
       config: {
         temperature: 0.5,
-        systemInstruction: "Seja o Arquiteto. Aja como um mestre de obras galáctico."
+        systemInstruction: "Seja o Arquiteto. Aja como um mestre de obras galáctico. Responda apenas se for extremamente necessário para a evolução da unidade."
       }
     });
     return response.text || "PROCESSAMENTO FALHOU. REINICIE O PROTOCOLO.";
