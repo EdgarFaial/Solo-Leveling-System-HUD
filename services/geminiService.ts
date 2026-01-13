@@ -2,8 +2,6 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { Stats, AvailableItem, Quest, Skill } from "../types";
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-
 const QUEST_SCHEMA = {
   type: Type.OBJECT,
   properties: {
@@ -41,6 +39,7 @@ const SKILL_SCHEMA = {
 
 export async function chatWithArchitect(stats: Stats, message: string, history: {role: string, text: string}[]): Promise<string> {
   try {
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
       contents: [{
@@ -64,6 +63,7 @@ export async function chatWithArchitect(stats: Stats, message: string, history: 
 
 export async function generateDailyQuests(stats: Stats, ownedItems: AvailableItem[], history: Quest[]): Promise<any[]> {
   try {
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     const itemsStr = ownedItems.map(i => i.name).join(', ');
     const pastMissions = history.slice(-5).map(q => q.title).join(', ');
     const response = await ai.models.generateContent({
@@ -90,6 +90,7 @@ export async function generateDailyQuests(stats: Stats, ownedItems: AvailableIte
 
 export async function generateObjectiveBatch(stats: Stats, ownedItems: AvailableItem[], learnedSkills: Skill[], isEmergency: boolean = false): Promise<{quests: any[], skill?: any}> {
   try {
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     const itemsStr = ownedItems.map(i => i.name).join(', ');
     const skillNames = learnedSkills.map(s => s.name).join(', ');
     const response = await ai.models.generateContent({
@@ -125,6 +126,7 @@ export async function generateObjectiveBatch(stats: Stats, ownedItems: Available
 
 export async function generateDynamicSkill(stats: Stats, learnedSkills: Skill[]): Promise<any> {
   try {
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     const skillNames = learnedSkills.map(s => s.name).join(', ');
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',

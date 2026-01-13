@@ -1,0 +1,7 @@
+
+/* Reset and global styles to satisfy build tool dependencies */
+body {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
