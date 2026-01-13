@@ -1,7 +1,6 @@
-
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Stats } from '../types';
-import { User, Save, X, Camera, Image as ImageIcon } from 'lucide-react';
+import { User, Save, X, Camera, Upload } from 'lucide-react';
 
 interface ProfileWindowProps {
   stats: Stats;
@@ -9,17 +8,38 @@ interface ProfileWindowProps {
   onClose: () => void;
 }
 
-const AVATARS = ['👤', '⚔️', '🔥', '💧', '⚡', '🌑', '👑', '🐺', '🐉', '💀'];
+const HUD_ICONS = [
+  'https://api.dicebear.com/7.x/identicon/svg?seed=rank-s&backgroundColor=061a23&color=00e5ff',
+  'https://api.dicebear.com/7.x/identicon/svg?seed=monarch&backgroundColor=061a23&color=00e5ff',
+  'https://api.dicebear.com/7.x/identicon/svg?seed=shadow&backgroundColor=061a23&color=00e5ff',
+  'https://api.dicebear.com/7.x/identicon/svg?seed=system&backgroundColor=061a23&color=00e5ff',
+  'https://api.dicebear.com/7.x/identicon/svg?seed=hunter&backgroundColor=061a23&color=00e5ff',
+  'https://api.dicebear.com/7.x/identicon/svg?seed=void&backgroundColor=061a23&color=00e5ff',
+  'https://api.dicebear.com/7.x/identicon/svg?seed=core&backgroundColor=061a23&color=00e5ff',
+  'https://api.dicebear.com/7.x/identicon/svg?seed=awakened&backgroundColor=061a23&color=00e5ff'
+];
 
 const ProfileWindow: React.FC<ProfileWindowProps> = ({ stats, onSave, onClose }) => {
   const [name, setName] = useState(stats.playerName);
   const [age, setAge] = useState(stats.age);
   const [goal, setGoal] = useState(stats.customGoal || "");
-  const [avatar, setAvatar] = useState(stats.avatar || '👤');
+  const [avatar, setAvatar] = useState(stats.avatar || HUD_ICONS[0]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleSave = () => {
     onSave({ playerName: name.toUpperCase(), age, customGoal: goal, avatar });
     onClose();
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setAvatar(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   return (
@@ -33,20 +53,43 @@ const ProfileWindow: React.FC<ProfileWindowProps> = ({ stats, onSave, onClose })
         </div>
 
         <div className="space-y-6">
-          <div className="flex flex-col items-center gap-4 mb-8">
-            <div className="w-24 h-24 border-2 border-cyan-400 cut-corners flex items-center justify-center text-5xl bg-cyan-400/5 shadow-[0_0_20px_rgba(0,229,255,0.2)]">
-              {avatar}
+          <div className="flex flex-col items-center gap-6 mb-8">
+            <div className="relative group">
+              <div className="w-28 h-28 border-2 border-cyan-400 cut-corners overflow-hidden flex items-center justify-center bg-cyan-400/5 shadow-[0_0_20px_rgba(0,229,255,0.2)]">
+                {avatar.length > 2 ? (
+                   <img src={avatar} alt="Avatar" className="w-full h-full object-cover" />
+                ) : (
+                   <div className="text-4xl text-cyan-400 font-black italic">{avatar}</div>
+                )}
+              </div>
+              <button 
+                onClick={() => fileInputRef.current?.click()}
+                className="absolute -bottom-2 -right-2 w-10 h-10 bg-cyan-400 text-black cut-corners flex items-center justify-center shadow-lg hover:bg-white transition-all"
+              >
+                <Camera size={18} />
+              </button>
+              <input 
+                type="file" 
+                ref={fileInputRef} 
+                onChange={handleFileUpload} 
+                accept="image/*" 
+                className="hidden" 
+              />
             </div>
-            <div className="flex flex-wrap justify-center gap-2">
-              {AVATARS.map(a => (
-                <button 
-                  key={a} 
-                  onClick={() => setAvatar(a)}
-                  className={`w-8 h-8 flex items-center justify-center border cut-corners transition-all ${avatar === a ? 'border-cyan-400 bg-cyan-400 text-black' : 'border-white/10 text-white hover:border-cyan-400'}`}
-                >
-                  {a}
-                </button>
-              ))}
+
+            <div className="space-y-3 w-full">
+              <span className="text-[8px] text-gray-600 font-black uppercase tracking-widest block text-center">Assinaturas de Rede:</span>
+              <div className="flex flex-wrap justify-center gap-2">
+                {HUD_ICONS.map((url, idx) => (
+                  <button 
+                    key={idx} 
+                    onClick={() => setAvatar(url)}
+                    className={`w-10 h-10 border cut-corners overflow-hidden transition-all ${avatar === url ? 'border-cyan-400 ring-1 ring-cyan-400' : 'border-white/10 hover:border-cyan-400/50'}`}
+                  >
+                    <img src={url} alt={`Icon ${idx}`} className="w-full h-full object-cover" />
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
 

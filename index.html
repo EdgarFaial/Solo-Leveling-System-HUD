@@ -1,10 +1,11 @@
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Solo Leveling System | HUD S-Rank</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><path d=%22M50 5 L90 25 L90 75 L50 95 L10 75 L10 25 Z%22 fill=%22none%22 stroke=%22%2300e5ff%22 stroke-width=%228%22/><text x=%2250%22 y=%2265%22 font-family=%22Orbitron%22 font-size=%2250%22 font-weight=%22900%22 fill=%22%2300e5ff%22 text-anchor=%22middle%22>S</text></svg>">
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6403370988033052" crossorigin="anonymous"></script>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
@@ -21,7 +22,7 @@
       background-color: var(--bg-deep);
       color: #e2e8f0;
       font-family: 'Rajdhani', sans-serif;
-      overflow: hidden; /* Impede o scroll no body para usar o scroll interno do app */
+      overflow: hidden;
       height: 100vh;
       width: 100vw;
       touch-action: manipulation;
@@ -29,7 +30,6 @@
 
     .system-font { font-family: 'Orbitron', sans-serif; }
 
-    /* HUD Scanlines */
     body::before {
       content: "";
       position: fixed;
@@ -65,11 +65,6 @@
       text-shadow: 0 0 12px var(--system-blue-glow);
     }
 
-    @keyframes pulse-cyan {
-      0%, 100% { box-shadow: 0 0 10px var(--system-blue-glow); }
-      50% { box-shadow: 0 0 30px var(--system-blue); }
-    }
-
     .progress-fill {
       position: relative;
       overflow: hidden;
@@ -90,7 +85,11 @@
 
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-
+    
+    /* Prevenir que o menu de baixo suma em dispositivos com notch/home bar */
+    .safe-bottom {
+      padding-bottom: calc(1.5rem + env(safe-area-inset-bottom));
+    }
   </style>
   <script type="importmap">
   {

@@ -1,7 +1,6 @@
-
 import React, { useState, useEffect } from 'react';
 import { 
-  User, ScrollText, Backpack, Coins, Shield, Brain, ShieldCheck, Cpu, Plus, MessageSquare
+  User, ScrollText, Backpack, Coins, Shield, Brain, ShieldCheck, Cpu, Plus, MessageSquare, Info
 } from 'lucide-react';
 import StatusWindow from './components/StatusWindow';
 import QuestWindow from './components/QuestWindow';
@@ -60,6 +59,19 @@ const App: React.FC = () => {
     }
   }, [stats, quests, inventory, availableItems, skills, isAwakened]);
 
+  // Fix for AdSense TagError: Load ad only once after mount and tab switch
+  useEffect(() => {
+    if (isAwakened) {
+      try {
+        const adsbygoogle = (window as any).adsbygoogle || [];
+        adsbygoogle.push({});
+      } catch (e) {
+        // Catch TagError if push is called more times than ins elements
+        console.debug("AdSense sync heartbeat.");
+      }
+    }
+  }, [isAwakened, activeTab]);
+
   const updateDailyQuests = async () => {
     if (stats.systemMode === 'custom') return;
     setIsProcessing(true);
@@ -76,7 +88,7 @@ const App: React.FC = () => {
 
   const handleAwakening = (name: string, age: number, goal: string, mode: 'architect' | 'custom') => {
     const finalStats: Stats = { 
-      ...INITIAL_STATS, playerName: name.toUpperCase(), age, customGoal: goal, goal: "CUSTOMIZADO", systemMode: mode, unallocatedPoints: 5, avatar: '👤'
+      ...INITIAL_STATS, playerName: name.toUpperCase(), age, customGoal: goal, goal: "CUSTOMIZADO", systemMode: mode, unallocatedPoints: 5, avatar: 'https://api.dicebear.com/7.x/identicon/svg?seed=rank-s&backgroundColor=061a23&color=00e5ff'
     };
     setStats(finalStats);
     if (mode === 'architect') triggerInitialBatch(finalStats);
@@ -112,11 +124,13 @@ const App: React.FC = () => {
   };
 
   const handleLevelUpSkill = async () => {
+    if (stats.systemMode === 'custom') return; // No modo personalizado o usuário cria manualmente
     setIsProcessing(true);
     try {
       const skillData = await generateDynamicSkill(stats);
       const skillObj: Skill = { ...skillData, id: `sk-${Date.now()}`, level: 1, isUnlocked: false, isDynamic: true };
       setSkills(prev => [...prev, skillObj]);
+      setNotification({ msg: "NOVA HABILIDADE IDENTIFICADA PELO ARQUITETO.", type: 'level-up' });
     } catch (e) { console.error(e); } finally { setIsProcessing(false); }
   };
 
@@ -176,8 +190,12 @@ const App: React.FC = () => {
 
       <header className="shrink-0 z-50 system-panel border-b border-cyan-400/20 px-6 py-4 flex items-center justify-between backdrop-blur-3xl">
         <div className="flex items-center gap-4 cursor-pointer active:scale-95 transition-all" onClick={() => setShowProfile(true)}>
-          <div className="w-10 h-10 border border-cyan-400/40 cut-corners flex items-center justify-center bg-cyan-400/5 text-xl">
-             {stats.avatar || '👤'}
+          <div className="w-10 h-10 border border-cyan-400/40 cut-corners overflow-hidden flex items-center justify-center bg-cyan-400/5 shadow-[0_0_10px_rgba(0,229,255,0.2)]">
+             {stats.avatar && stats.avatar.length > 2 ? (
+                <img src={stats.avatar} alt="Avatar" className="w-full h-full object-cover" />
+             ) : (
+                <div className="text-xl">{stats.avatar || '👤'}</div>
+             )}
           </div>
           <div className="flex flex-col">
             <h2 className="system-font text-[13px] text-cyan-400 font-black uppercase italic leading-none glow-text">{stats.playerName}</h2>
@@ -192,7 +210,7 @@ const App: React.FC = () => {
         </div>
       </header>
 
-      <main className="flex-1 overflow-y-auto px-6 py-6 no-scrollbar">
+      <main className="flex-1 overflow-y-auto px-6 py-6 no-scrollbar pb-32">
         {activeTab === 'STATUS' && <StatusWindow stats={stats} onAllocate={(k) => setTrainingStat(k as keyof Stats)} />}
         
         {activeTab === 'PROTOCOLS' && (
@@ -203,36 +221,7 @@ const App: React.FC = () => {
                   <Plus size={14} /> [ CRIAR MISSÃO ]
                 </button>
               )}
-              {stats.systemMode === 'custom' && (
-                <button onClick={async () => {
-                  setIsProcessing(true);
-                  const s = await suggestCustomMission(stats.customGoal || "", availableItems.filter(i => i.owned));
-                  setQuests(prev => [{...s, id: `sug-${Date.now()}`, progress: 0, type: 'intervention', completed: false, goldReward: 500, expReward: 250}, ...prev]);
-                  setIsProcessing(false);
-                }} className="px-4 border border-purple-500/40 text-purple-400 system-font text-[10px] font-black uppercase italic cut-corners">SUGERIR</button>
-              )}
             </div>
-            {showCustomQuestForm && (
-              <div className="system-panel cut-corners p-6 border-cyan-400 bg-cyan-950/20 animate-in slide-in-from-top duration-300">
-                <form onSubmit={(e: any) => {
-                  e.preventDefault();
-                  const q: Quest = {
-                    id: `c-${Date.now()}`, title: e.target.title.value, description: e.target.desc.value, progress: 0, target: 1, type: e.target.type.value, completed: false,
-                    reward: 'Própria', goldReward: 50, expReward: 25, measurableAction: 'Execução', timeCommitment: 'Variável', biologicalBenefit: 'Foco', adaptationLogic: 'Manual', estimatedTime: 'Manual', patternCorrection: 'Inércia', competenceDeveloped: 'Disciplina', protocol: 'Custom', category: 'FÍSICO', isUserCreated: true
-                  };
-                  setQuests(prev => [q, ...prev]);
-                  setShowCustomQuestForm(false);
-                }} className="space-y-4">
-                  <input name="title" placeholder="TÍTULO..." required className="w-full bg-transparent border-b border-cyan-400/40 p-2 text-white font-black uppercase text-xs outline-none" />
-                  <textarea name="desc" placeholder="OBJETIVO..." required className="w-full bg-transparent border-b border-cyan-400/40 p-2 text-white font-black uppercase text-[10px] outline-none h-16 resize-none" />
-                  <select name="type" className="w-full bg-black border-b border-cyan-400/40 p-2 text-white font-black text-[10px] uppercase outline-none">
-                    <option value="daily">Missão Diária</option>
-                    <option value="intervention">Missão Normal</option>
-                  </select>
-                  <button type="submit" className="w-full bg-cyan-400 text-black font-black py-3 text-[10px] uppercase italic">VINCULAR PROTOCOLO</button>
-                </form>
-              </div>
-            )}
             <QuestWindow quests={quests} onComplete={completeQuest} onProgress={(id) => setQuests(prev => prev.map(q => q.id === id ? {...q, progress: Math.min(q.progress + 1, q.target)} : q))} />
           </div>
         )}
@@ -265,10 +254,27 @@ const App: React.FC = () => {
           }));
         }} />}
         {activeTab === 'INVENTORY' && <InventoryWindow items={inventory} />}
-        <div className="h-24"></div>
+
+        {/* AdSense Unit at the end of the sections */}
+        <div className="mt-12 mb-8 system-panel border-cyan-400/30 cut-corners p-4 bg-cyan-950/20">
+          <div className="flex items-center gap-2 mb-2 border-b border-cyan-400/10 pb-2">
+            <Info size={12} className="text-cyan-400 animate-pulse" />
+            <span className="system-font text-[9px] font-black text-cyan-400 tracking-[0.2em] uppercase italic">PROTOCOL: EXTERNAL_REVENUE</span>
+          </div>
+          <div className="min-h-[100px] flex items-center justify-center overflow-hidden">
+             {/* AdSense ins tag */}
+             <ins className="adsbygoogle"
+                  style={{ display: 'block', width: '100%' }}
+                  data-ad-client="ca-pub-6403370988033052"
+                  data-ad-slot="1234567890" 
+                  data-ad-format="auto"
+                  data-full-width-responsive="true"></ins>
+          </div>
+          <p className="text-[7px] text-gray-600 font-black uppercase text-center mt-2 tracking-widest italic opacity-50">Sincronização de recursos externos para manutenção do núcleo biológico.</p>
+        </div>
       </main>
 
-      <nav className="shrink-0 system-panel border-t border-cyan-400/20 px-2 py-6 flex items-center justify-around backdrop-blur-3xl z-50">
+      <nav className="shrink-0 system-panel border-t border-cyan-400/20 px-2 safe-bottom flex items-center justify-around backdrop-blur-3xl z-50">
         {[ { id: 'STATUS', icon: Shield, label: 'STATUS' }, { id: 'PROTOCOLS', icon: ScrollText, label: 'MISSÃO' }, { id: 'SKILLS', icon: Brain, label: 'SKILLS' }, { id: 'REGISTRY', icon: ShieldCheck, label: 'ITENS' }, { id: 'CHAT', icon: MessageSquare, label: 'CHAT' } ].map((t) => (
           <button key={t.id} onClick={() => setActiveTab(t.id as SystemTab)} className={`flex flex-col items-center gap-2 flex-1 transition-all ${activeTab === t.id ? 'text-cyan-400 scale-110' : 'text-gray-600'}`}>
             <t.icon size={22} className={activeTab === t.id ? 'glow-text' : ''} />
@@ -287,7 +293,7 @@ const App: React.FC = () => {
 
       {skillToTest && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/98 p-6 backdrop-blur-3xl">
-          <div className="w-full max-w-sm system-panel border-cyan-400 cut-corners p-10 text-center space-y-8 animate-in zoom-in-95 duration-500">
+          <div className="w-full max-sm system-panel border-cyan-400 cut-corners p-10 text-center space-y-8 animate-in zoom-in-95 duration-500">
             <h2 className="system-font text-cyan-400 text-lg uppercase font-black italic">{skillToTest.name}</h2>
             <p className="text-sm font-black text-white italic uppercase leading-relaxed mb-6">"{skillToTest.testTask}"</p>
             <button onClick={() => { setSkills(prev => prev.map(s => s.id === skillToTest.id ? {...s, isUnlocked: true} : s)); setSkillToTest(null); }} className="w-full bg-cyan-400 text-black font-black py-5 system-font uppercase hover:bg-white transition-all italic shadow-lg">CONFIRMAR EXECUÇÃO</button>
