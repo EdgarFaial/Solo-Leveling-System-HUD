@@ -1,11 +1,8 @@
 
 import { GoogleGenAI, Type } from "@google/genai";
-import { Stats, AvailableItem, Quest } from "../types";
+import { Stats, AvailableItem, Quest, Skill } from "../types";
 
-const getAIClient = () => {
-  // Chave de API inserida diretamente para funcionamento em ambiente de produção/browser
-  return new GoogleGenAI({ apiKey: 'AIzaSyBG8lcJlk0zS1719in_0x9P6b5iYDH-evM' });
-};
+const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 const QUEST_SCHEMA = {
   type: Type.OBJECT,
@@ -21,130 +18,126 @@ const QUEST_SCHEMA = {
     adaptationLogic: { type: Type.STRING },
     estimatedTime: { type: Type.STRING },
     patternCorrection: { type: Type.STRING },
-    competenceDeveloped: { type: Type.STRING }
+    competenceDeveloped: { type: Type.STRING },
+    deadlineDays: { type: Type.NUMBER, description: "Número de dias para completar. Use 0 para diárias." }
   },
-  required: ["title", "description", "category", "target", "reward", "measurableAction", "timeCommitment", "biologicalBenefit", "adaptationLogic", "estimatedTime", "patternCorrection", "competenceDeveloped"],
+  required: ["title", "description", "category", "target", "reward", "measurableAction", "timeCommitment", "biologicalBenefit", "adaptationLogic", "estimatedTime", "patternCorrection", "competenceDeveloped", "deadlineDays"],
+};
+
+const SKILL_SCHEMA = {
+  type: Type.OBJECT,
+  properties: {
+    name: { type: Type.STRING },
+    type: { type: Type.STRING },
+    description: { type: Type.STRING },
+    requirement: { type: Type.STRING },
+    efficiencyBonus: { type: Type.STRING },
+    testTask: { type: Type.STRING },
+    testTarget: { type: Type.NUMBER },
+    testUnit: { type: Type.STRING }
+  },
+  required: ["name", "type", "description", "requirement", "efficiencyBonus", "testTask", "testTarget", "testUnit"],
 };
 
 export async function chatWithArchitect(stats: Stats, message: string, history: {role: string, text: string}[]): Promise<string> {
   try {
-    const ai = getAIClient();
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
-      contents: `VOCÊ É O ARQUITETO do sistema Solo Leveling. Sua personalidade é fria, técnica, autoritária e direta. Você não usa emojis. Você só responde o estritamente necessário para guiar a unidade ${stats.playerName}.
-      CONTEXTO: Objetivo da unidade: ${stats.customGoal || stats.goal}. Nível: ${stats.level}.
-      Historico recente: ${JSON.stringify(history.slice(-3))}
-      MENSAGEM DA UNIDADE: ${message}`,
+      contents: [{
+        parts: [{
+          text: `VOCÊ É O ARQUITETO do sistema Solo Leveling. Sua personalidade é fria, técnica, autoritária e direta. Você não usa emojis. Você só responde o estritamente necessário para guiar a unidade ${stats.playerName}.
+          OBJETIVO ATUAL: ${stats.customGoal || stats.goal}. 
+          DADOS DA UNIDADE: Idade ${stats.age}, Nível ${stats.level}, Falhas recentes ${stats.failedMissionsCount}.
+          MENSAGEM: ${message}`
+        }]
+      }],
       config: {
-        temperature: 0.5,
-        systemInstruction: "Seja o Arquiteto. Aja como um mestre de obras galáctico. Responda apenas se for extremamente necessário para a evolução da unidade."
+        temperature: 0.2,
+        systemInstruction: "Aja como o Arquiteto. Respostas curtas, sem emoção, focadas em otimização biológica e progresso."
       }
     });
-    return response.text || "PROCESSAMENTO FALHOU. REINICIE O PROTOCOLO.";
+    return response.text || "PROTOCOL_FAILURE.";
   } catch (e) {
-    return "CONEXÃO COM O NÚCLEO PERDIDA.";
+    return "CONEXÃO COM O NÚCLEO INSTÁVEL.";
   }
 }
 
-export async function generateDailyQuests(stats: Stats, ownedItems: AvailableItem[]): Promise<any[]> {
+export async function generateDailyQuests(stats: Stats, ownedItems: AvailableItem[], history: Quest[]): Promise<any[]> {
   try {
-    const ai = getAIClient();
     const itemsStr = ownedItems.map(i => i.name).join(', ');
+    const pastMissions = history.slice(-5).map(q => q.title).join(', ');
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
-      contents: `VOCÊ É O ARQUITETO. Gere 3 MISSÕES DIÁRIAS para a unidade ${stats.playerName}.
-      BASE DE PERFORMANCE: Atributos STR:${stats.strength}, INT:${stats.intelligence}, WILL:${stats.will}.
-      Hardware: ${itemsStr}. Objetivo: ${stats.customGoal || stats.goal}.
-      As missões diárias devem ser rotineiras e focadas em disciplina constante.
-      Retorne um ARRAY de JSON estrito.`,
+      contents: [{
+        parts: [{
+          text: `Gere 3 MISSÕES DIÁRIAS para a unidade ${stats.playerName} (Idade: ${stats.age}).
+          Hardware: ${itemsStr}. 
+          Histórico recente: ${pastMissions}.
+          O Arquiteto deve decidir se repete ou remove missões baseado no objetivo: ${stats.customGoal || stats.goal}.
+          Considere a idade para intensidade física.`
+        }]
+      }],
       config: {
         responseMimeType: "application/json",
-        responseSchema: {
-          type: Type.ARRAY,
-          items: QUEST_SCHEMA
-        }
+        responseSchema: { type: Type.ARRAY, items: QUEST_SCHEMA }
       }
     });
     return JSON.parse(response.text || '[]');
   } catch (error) {
-    console.error(error);
     return [];
   }
 }
 
-export async function generateObjectiveBatch(stats: Stats, ownedItems: AvailableItem[]): Promise<any[]> {
+export async function generateObjectiveBatch(stats: Stats, ownedItems: AvailableItem[], learnedSkills: Skill[], isEmergency: boolean = false): Promise<{quests: any[], skill?: any}> {
   try {
-    const ai = getAIClient();
-    const goalInfo = stats.customGoal || stats.goal;
     const itemsStr = ownedItems.map(i => i.name).join(', ');
-
+    const skillNames = learnedSkills.map(s => s.name).join(', ');
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
-      contents: `VOCÊ É O ARQUITETO. A unidade completou um protocolo. Gere um BATCH de 5 NOVAS MISSÕES NORMIAIS que formem um caminho progressivo para atingir o objetivo: ${goalInfo}.
-      Hardware: ${itemsStr}.
-      REGRAS: 5 missões sequenciais lógicas. Retorne um ARRAY de 5 objetos JSON.`,
-      config: {
-        responseMimeType: "application/json",
-        responseSchema: {
-          type: Type.ARRAY,
-          items: QUEST_SCHEMA,
-          minItems: 5,
-          maxItems: 5
-        }
-      }
-    });
-    return JSON.parse(response.text || '[]');
-  } catch (error) {
-    console.error(error);
-    return [];
-  }
-}
-
-export async function suggestCustomMission(goal: string, ownedItems: AvailableItem[]): Promise<any> {
-  try {
-    const ai = getAIClient();
-    const itemsStr = ownedItems.map(i => i.name).join(', ');
-    const response = await ai.models.generateContent({
-      model: 'gemini-3-flash-preview',
-      contents: `VOCÊ É O ARQUITETO. O usuário está no MODO LIVRE. Sugira UMA missão que ajude no objetivo: ${goal}.`,
-      config: {
-        responseMimeType: "application/json",
-        responseSchema: QUEST_SCHEMA
-      }
-    });
-    return JSON.parse(response.text || '{}');
-  } catch (error) {
-    throw error;
-  }
-}
-
-export async function generateDynamicSkill(stats: Stats): Promise<any> {
-  try {
-    const ai = getAIClient();
-    const goalInfo = stats.customGoal || stats.goal;
-    const response = await ai.models.generateContent({
-      model: 'gemini-3-flash-preview',
-      contents: `VOCÊ É O ARQUITETO. Gere uma HABILIDADE ÚNICA para o objetivo: ${goalInfo}.`,
+      contents: [{
+        parts: [{
+          text: `Gere um lote de 5 MISSÕES SEMANAIS (deadline 7 dias) e 1 HABILIDADE SUGERIDA.
+          ${isEmergency ? 'ESTA É UMA MISSÃO DE EMERGÊNCIA devido a falhas frequentes.' : ''}
+          Unidade: ${stats.playerName}, Idade: ${stats.age}. 
+          Hardware: ${itemsStr}.
+          Objetivo final: ${stats.customGoal || stats.goal}.
+          Habilidades já aprendidas: ${skillNames}.
+          Se a unidade já aprendeu habilidades iniciais, a nova deve ser uma progressão coerente.`
+        }]
+      }],
       config: {
         responseMimeType: "application/json",
         responseSchema: {
           type: Type.OBJECT,
           properties: {
-            name: { type: Type.STRING },
-            type: { type: Type.STRING },
-            description: { type: Type.STRING },
-            requirement: { type: Type.STRING },
-            efficiencyBonus: { type: Type.STRING },
-            testTask: { type: Type.STRING },
-            testTarget: { type: Type.NUMBER },
-            testUnit: { type: Type.STRING }
+            quests: { type: Type.ARRAY, items: QUEST_SCHEMA },
+            skill: SKILL_SCHEMA
           },
-          required: ["name", "type", "description", "requirement", "efficiencyBonus", "testTask", "testTarget", "testUnit"],
+          required: ["quests", "skill"]
         }
+      }
+    });
+    return JSON.parse(response.text || '{"quests": [], "skill": null}');
+  } catch (error) {
+    return { quests: [] };
+  }
+}
+
+export async function generateDynamicSkill(stats: Stats, learnedSkills: Skill[]): Promise<any> {
+  try {
+    const skillNames = learnedSkills.map(s => s.name).join(', ');
+    const response = await ai.models.generateContent({
+      model: 'gemini-3-flash-preview',
+      contents: [{ parts: [{ text: `Gere uma nova HABILIDADE sugerida pelo Arquiteto. 
+      Unidade idade: ${stats.age}. Objetivo: ${stats.customGoal || stats.goal}. 
+      Histórico de skills: ${skillNames}.` }] }],
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: SKILL_SCHEMA
       }
     });
     return JSON.parse(response.text || '{}');
   } catch (error) {
-    throw error;
+    return null;
   }
 }

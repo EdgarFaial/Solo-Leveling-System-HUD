@@ -10,36 +10,59 @@ interface QuestWindowProps {
 }
 
 const QuestWindow: React.FC<QuestWindowProps> = ({ quests, onComplete, onProgress }) => {
-  const [activeTab, setActiveTab] = useState<'daily' | 'intervention'>('daily');
+  const [activeTab, setActiveTab] = useState<'daily' | 'intervention' | 'emergency'>('daily');
 
-  const filteredQuests = quests.filter(q => q.type === activeTab);
+  const filteredQuests = quests.filter(q => {
+    if (activeTab === 'emergency') return q.type === 'emergency';
+    return q.type === activeTab;
+  });
+
+  const getDeadlineText = (iso: string) => {
+    const d = new Date(iso);
+    const now = new Date();
+    const diff = d.getTime() - now.getTime();
+    if (diff < 0) return "EXPIRADO";
+    const hours = Math.floor(diff / (1000 * 3600));
+    if (hours < 24) return `${hours}h restantes`;
+    return `${Math.floor(hours/24)}d restantes`;
+  };
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-right-10 duration-700">
-      <div className="flex gap-2 mb-8">
+      <div className="flex gap-2 mb-8 overflow-x-auto no-scrollbar">
         <button 
           onClick={() => setActiveTab('daily')}
-          className={`flex-1 py-4 system-panel cut-corners text-[10px] font-black tracking-[0.3em] uppercase transition-all italic ${
+          className={`flex-1 min-w-[120px] py-4 system-panel cut-corners text-[10px] font-black tracking-[0.3em] uppercase transition-all italic ${
             activeTab === 'daily' ? 'border-cyan-400 text-cyan-400 bg-cyan-400/10 shadow-[0_0_15px_rgba(0,229,255,0.1)]' : 'border-white/5 text-gray-600 opacity-50 hover:opacity-100'
           }`}
         >
-          Protocolos Diários
+          Diários
         </button>
         <button 
           onClick={() => setActiveTab('intervention')}
-          className={`flex-1 py-4 system-panel cut-corners text-[10px] font-black tracking-[0.3em] uppercase transition-all italic ${
+          className={`flex-1 min-w-[120px] py-4 system-panel cut-corners text-[10px] font-black tracking-[0.3em] uppercase transition-all italic ${
             activeTab === 'intervention' ? 'border-purple-500 text-purple-400 bg-purple-500/10 shadow-[0_0_15px_rgba(168,85,247,0.1)]' : 'border-white/5 text-gray-600 opacity-50 hover:opacity-100'
           }`}
         >
-          Intervenções de Crescimento
+          Semanais
         </button>
+        {quests.some(q => q.type === 'emergency') && (
+          <button 
+            onClick={() => setActiveTab('emergency')}
+            className={`flex-1 min-w-[120px] py-4 system-panel cut-corners text-[10px] font-black tracking-[0.3em] uppercase transition-all italic ${
+              activeTab === 'emergency' ? 'border-red-500 text-red-500 bg-red-500/10 shadow-[0_0_15px_rgba(239,68,68,0.1)]' : 'border-white/5 text-gray-600 opacity-50 hover:opacity-100'
+            }`}
+          >
+            Emergência
+          </button>
+        )}
       </div>
 
       <div className="space-y-6">
         {filteredQuests.length === 0 ? (
           <div className="py-24 text-center opacity-10">
             <ShieldAlert size={64} strokeWidth={1} className="mx-auto mb-6" />
-            <p className="text-[10px] font-black uppercase tracking-[0.5em] italic">Nenhum protocolo ativo detectado no setor.</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.5em] italic">Nenhum protocolo ativo detectado.</p>
           </div>
         ) : (
           filteredQuests.map((quest) => (
@@ -47,7 +70,8 @@ const QuestWindow: React.FC<QuestWindowProps> = ({ quests, onComplete, onProgres
               key={quest.id} 
               className={`system-panel cut-corners p-7 border-l-4 transition-all relative overflow-hidden group ${
                 quest.completed ? 'opacity-30 grayscale border-green-500 pointer-events-none' : 
-                quest.type === 'intervention' ? 'border-purple-500 hover:bg-purple-500/5' : 'border-cyan-400 hover:bg-cyan-400/5'
+                quest.type === 'intervention' ? 'border-purple-500 hover:bg-purple-500/5' : 
+                quest.type === 'emergency' ? 'border-red-500 hover:bg-red-500/5' : 'border-cyan-400 hover:bg-cyan-400/5'
               }`}
             >
               <div className="absolute top-0 right-0 px-4 py-1.5 bg-white/5 text-[7px] font-black tracking-[0.4em] uppercase text-gray-500 italic rounded-bl-xl border-l border-b border-white/5">
@@ -57,7 +81,7 @@ const QuestWindow: React.FC<QuestWindowProps> = ({ quests, onComplete, onProgres
               <div className="flex justify-between items-start mb-6">
                 <div className="space-y-4 flex-1 pr-6">
                   <div className="flex items-center gap-3">
-                     <Activity size={14} className={quest.type === 'intervention' ? 'text-purple-500' : 'text-cyan-400'} />
+                     <Activity size={14} className={quest.type === 'intervention' ? 'text-purple-500' : quest.type === 'emergency' ? 'text-red-500' : 'text-cyan-400'} />
                      <h3 className="font-black text-white uppercase tracking-[0.1em] text-base italic leading-none glow-text">{quest.title}</h3>
                   </div>
                   
@@ -68,34 +92,17 @@ const QuestWindow: React.FC<QuestWindowProps> = ({ quests, onComplete, onProgres
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                     <div className="bg-black/40 p-4 border border-white/5 cut-corners">
                       <div className="flex items-center gap-2 mb-2">
-                        <Target size={12} className="text-cyan-500" />
-                        <span className="text-[8px] font-black text-cyan-500 uppercase tracking-[0.3em] italic">Ação Mensurável:</span>
+                        <Clock size={12} className="text-cyan-500" />
+                        <span className="text-[8px] font-black text-cyan-500 uppercase tracking-[0.3em] italic">Prazo:</span>
                       </div>
-                      <p className="text-[10px] text-white font-bold italic uppercase">{quest.measurableAction}</p>
+                      <p className="text-[10px] text-white font-bold italic uppercase">{getDeadlineText(quest.deadline)}</p>
                     </div>
                     <div className="bg-black/40 p-4 border border-white/5 cut-corners">
                       <div className="flex items-center gap-2 mb-2">
-                        <Clock size={12} className="text-cyan-500" />
-                        <span className="text-[8px] font-black text-cyan-500 uppercase tracking-[0.3em] italic">Comprometimento:</span>
+                        <Target size={12} className="text-cyan-500" />
+                        <span className="text-[8px] font-black text-cyan-500 uppercase tracking-[0.3em] italic">Meta:</span>
                       </div>
-                      <p className="text-[10px] text-white font-bold italic uppercase">{quest.timeCommitment}</p>
-                    </div>
-                  </div>
-
-                  <div className="space-y-3 bg-cyan-400/5 p-4 cut-corners border border-cyan-400/10">
-                    <div className="flex items-start gap-3">
-                      <Microscope size={14} className="text-cyan-400 mt-0.5" />
-                      <div>
-                        <span className="text-[8px] font-black text-cyan-400 uppercase tracking-[0.3em] italic block mb-1">Benefício Sistêmico:</span>
-                        <p className="text-[10px] text-gray-300 italic font-medium leading-relaxed">{quest.biologicalBenefit}</p>
-                      </div>
-                    </div>
-                    <div className="flex items-start gap-3 border-t border-cyan-400/10 pt-2">
-                      <Info size={14} className="text-gray-500 mt-0.5" />
-                      <div>
-                        <span className="text-[8px] font-black text-gray-500 uppercase tracking-[0.3em] italic block mb-1">Lógica de Adaptação:</span>
-                        <p className="text-[9px] text-gray-500 italic font-medium leading-relaxed">{quest.adaptationLogic}</p>
-                      </div>
+                      <p className="text-[10px] text-white font-bold italic uppercase">{quest.target} {quest.measurableAction}</p>
                     </div>
                   </div>
                 </div>
@@ -104,7 +111,9 @@ const QuestWindow: React.FC<QuestWindowProps> = ({ quests, onComplete, onProgres
                   <button 
                     onClick={() => onProgress(quest.id)}
                     className={`w-14 h-14 border cut-corners flex items-center justify-center transition-all group shrink-0 active:scale-90 ${
-                      quest.type === 'intervention' ? 'border-purple-500/40 hover:bg-purple-500 shadow-purple-500/20' : 'border-cyan-400/40 hover:bg-cyan-400 shadow-cyan-400/20'
+                      quest.type === 'intervention' ? 'border-purple-500/40 hover:bg-purple-500 shadow-purple-500/20' : 
+                      quest.type === 'emergency' ? 'border-red-500/40 hover:bg-red-500 shadow-red-500/20' :
+                      'border-cyan-400/40 hover:bg-cyan-400 shadow-cyan-400/20'
                     } hover:text-black hover:shadow-lg`}
                   >
                     <Plus size={24} strokeWidth={3} />
@@ -114,12 +123,12 @@ const QuestWindow: React.FC<QuestWindowProps> = ({ quests, onComplete, onProgres
 
               <div className="space-y-2.5">
                 <div className="flex justify-between text-[10px] font-black text-gray-600 uppercase italic tracking-widest">
-                  <span>Sincronização de Execução</span>
+                  <span>Execução</span>
                   <span className="text-white group-hover:text-cyan-400 transition-colors">{quest.progress} / {quest.target}</span>
                 </div>
                 <div className="h-2 bg-black/60 cut-corners overflow-hidden p-[1px] border border-white/5">
                   <div 
-                    className={`h-full progress-fill transition-all duration-700 ease-out ${quest.completed ? 'bg-green-500' : quest.type === 'intervention' ? 'bg-purple-500 shadow-[0_0_10px_#a855f7]' : 'bg-cyan-400 shadow-[0_0_10px_#00e5ff]'}`}
+                    className={`h-full progress-fill transition-all duration-700 ease-out ${quest.completed ? 'bg-green-500' : quest.type === 'intervention' ? 'bg-purple-500 shadow-[0_0_10px_#a855f7]' : quest.type === 'emergency' ? 'bg-red-500 shadow-[0_0_10px_#ef4444]' : 'bg-cyan-400 shadow-[0_0_10px_#00e5ff]'}`}
                     style={{ width: `${Math.min((quest.progress / quest.target) * 100, 100)}%` }}
                   />
                 </div>
@@ -141,7 +150,9 @@ const QuestWindow: React.FC<QuestWindowProps> = ({ quests, onComplete, onProgres
                   <button 
                     onClick={() => onComplete(quest.id)}
                     className={`text-black font-black px-8 py-3 text-[11px] system-font tracking-[0.3em] italic animate-pulse shadow-xl transition-transform active:scale-95 ${
-                      quest.type === 'intervention' ? 'bg-purple-500 shadow-purple-500/40' : 'bg-cyan-400 shadow-cyan-400/40'
+                      quest.type === 'intervention' ? 'bg-purple-500 shadow-purple-500/40' : 
+                      quest.type === 'emergency' ? 'bg-red-500 shadow-red-500/40' :
+                      'bg-cyan-400 shadow-cyan-400/40'
                     }`}
                   >
                     FINALIZAR PROTOCOLO

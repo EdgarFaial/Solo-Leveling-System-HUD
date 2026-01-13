@@ -28,6 +28,8 @@ export interface Stats {
   fitnessLevel: 'beginner' | 'intermediate' | 'advanced';
   systemMode: 'architect' | 'custom';
   lastDailyUpdate?: string;
+  lastWeeklyUpdate?: string;
+  failedMissionsCount: number;
   avatar?: string;
 }
 
@@ -42,7 +44,7 @@ export interface Item {
 export interface AvailableItem {
   id: string;
   name: string;
-  category: 'diário' | 'academia' | 'instrumento' | 'smartwatch' | 'app' | 'espaço';
+  category: 'diário' | 'academia' | 'instrumento' | 'smartwatch' | 'app' | 'espaço' | 'custom';
   description: string;
   owned: boolean;
   missionBonus: string;
@@ -69,9 +71,10 @@ export interface Quest {
   protocol: string;
   progress: number;
   target: number;
-  type: 'daily' | 'intervention' | 'secret' | 'penalty';
+  type: 'daily' | 'intervention' | 'secret' | 'penalty' | 'emergency';
   category: QuestCategory;
   completed: boolean;
+  deadline: string; // ISO string
   reward: string;
   goldReward: number;
   expReward: number;
@@ -142,6 +145,7 @@ export const INITIAL_STATS: Stats = {
   will: 1,
   unallocatedPoints: 0,
   gold: 0,
+  failedMissionsCount: 0,
   preferredTrainingTime: 'morning',
   availableHoursPerDay: 1,
   fitnessLevel: 'beginner',
