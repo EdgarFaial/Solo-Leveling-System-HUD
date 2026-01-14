@@ -2,6 +2,7 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { Stats, AvailableItem, Quest, Skill } from "../types";
 
+// Chaves de API em ordem de prioridade
 const API_KEYS = [
   process.env.API_KEY,
   "AIzaSyBG8lcJlk0zS1719in_0x9P6b5iYDH-evM",
@@ -11,20 +12,47 @@ const API_KEYS = [
   "AIzaSyDIkoO-nNj_3ttpR9HLwVZ134CCOOSV78g"
 ].filter(Boolean) as string[];
 
+// Recupera o último índice funcional ou começa do 0
+let currentKeyIndex = parseInt(localStorage.getItem('sl_api_index') || '0');
+
 async function getGenerativeModelResponse(config: any) {
   let lastError = null;
-  for (const key of API_KEYS) {
+  const totalKeys = API_KEYS.length;
+
+  // Tenta as chaves começando do índice atual até percorrer todas (loop circular)
+  for (let attempt = 0; attempt < totalKeys; attempt++) {
+    const i = (currentKeyIndex + attempt) % totalKeys;
+    const key = API_KEYS[i];
+    
     try {
       const ai = new GoogleGenAI({ apiKey: key });
       const response = await ai.models.generateContent(config);
-      if (response) return response;
-    } catch (e) {
+      
+      if (response) {
+        // Sucesso: atualiza o índice funcional e salva
+        if (currentKeyIndex !== i) {
+          currentKeyIndex = i;
+          localStorage.setItem('sl_api_index', i.toString());
+        }
+        return response;
+      }
+    } catch (e: any) {
       lastError = e;
-      console.warn("Chave atual indisponível ou limite excedido. Tentando próxima...");
-      continue;
+      // Captura códigos de erro comuns de limite ou chave
+      const status = e?.status || e?.target?.status;
+      
+      // Se for erro de quota (429), chave inválida (400) ou não autorizada (401), tenta a próxima
+      if (status === 429 || status === 400 || status === 401) {
+        console.warn(`Sistema: Chave de acesso [${i}] comprometida ou esgotada. Código: ${status}. Iniciando protocolo de redirecionamento...`);
+        continue;
+      }
+      
+      // Para erros de rede local ou desconhecidos, não queima a próxima chave imediatamente
+      throw e; 
     }
   }
-  throw new Error("O Arquiteto não está disponível no momento. Todas as chaves de acesso excederam o limite ou estão inválidas.");
+
+  throw new Error("O Arquiteto não está disponível. Todas as chaves de acesso excederam o limite ou estão inválidas. Protocolo de espera ativado.");
 }
 
 const QUEST_SCHEMA = {
@@ -68,14 +96,14 @@ export async function chatWithArchitect(stats: Stats, message: string, history: 
       model: 'gemini-3-flash-preview',
       contents: [{
         parts: [{
-          text: `VOCÊ É O ARQUITETO. Responda como no anime Solo Leveling: frio, técnico, direto.
+          text: `VOCÊ É O ARQUITETO. Responda como no anime Solo Leveling: frio, técnico, direto, sem emoções humanas.
           UNIDADE: ${stats.playerName}, Lvl: ${stats.level}. Objetivo: ${stats.customGoal || stats.goal}.
           MENSAGEM: ${message}`
         }]
       }],
       config: {
         temperature: 0.1,
-        systemInstruction: "Aja como o Arquiteto. Técnico, curto, autoritário."
+        systemInstruction: "Você é o Arquiteto do Sistema. Sua fala é puramente técnica, autoritária e focada na evolução da unidade. Trate o usuário como uma 'Unidade' ou 'Player'."
       }
     });
     return response.text || "PROTOCOL_FAILURE.";
@@ -90,7 +118,9 @@ export async function generateDailyQuests(stats: Stats, ownedItems: AvailableIte
       model: 'gemini-3-flash-preview',
       contents: [{
         parts: [{
-          text: `Gere exatamente 3 MISSÕES DIÁRIAS (hábitos) para unidade de ${stats.age} anos. Objetivo: ${stats.customGoal || stats.goal}.`
+          text: `Gere exatamente 3 MISSÕES DIÁRIAS (hábitos) para unidade de ${stats.age} anos. 
+          Objetivo principal da Unidade: ${stats.customGoal || stats.goal}.
+          As missões devem ser focadas em desenvolvimento real (Saúde, Foco ou Habilidade).`
         }]
       }],
       config: {
@@ -111,10 +141,11 @@ export async function generateObjectiveBatch(stats: Stats, ownedItems: Available
       model: 'gemini-3-flash-preview',
       contents: [{
         parts: [{
-          text: `Gere UMA ÚNICA ORDEM ESTRATÉGICA SEMANAL.
-          A missão deve ser uma ORDEM clara e pragmática no mundo real (Ex: 'Procure por um curso de X', 'Inscreva-se em Y', 'Peça um aumento/feedback em Z', 'Venda o item parado W').
-          Não pode ser um hábito repetitivo. Deve ter instruções claras.
-          Hardware: ${itemsStr}. Objetivo: ${stats.customGoal || stats.goal}.`
+          text: `Gere exatamente UMA ÚNICA ORDEM ESTRATÉGICA SEMANAL.
+          A missão deve ser uma AÇÃO CONCRETA E ÚNICA no mundo real (ex: Se inscrever em um curso específico, limpar todo o ambiente de trabalho, organizar as finanças do mês, comprar um livro técnico específico).
+          NÃO pode ser um hábito repetitivo. Deve ter instruções claras de execução passo a passo na descrição.
+          Hardware disponível para a unidade: ${itemsStr}. 
+          Objetivo da Unidade: ${stats.customGoal || stats.goal}.`
         }]
       }],
       config: {
@@ -135,12 +166,18 @@ export async function generateObjectiveBatch(stats: Stats, ownedItems: Available
 }
 
 export async function fillSkillPool(stats: Stats, currentCount: number): Promise<Skill[]> {
-  if (currentCount >= 5) return [];
   const needed = 5 - currentCount;
+  if (needed <= 0) return [];
+  
   try {
     const response = await getGenerativeModelResponse({
       model: 'gemini-3-flash-preview',
-      contents: [{ parts: [{ text: `Gere exatamente ${needed} novas habilidades (skills) sugeridas para evolução. Objetivo: ${stats.customGoal || stats.goal}.` }] }],
+      contents: [{ 
+        parts: [{ 
+          text: `Gere exatamente ${needed} novas habilidades (skills) sugeridas para evolução da unidade nível ${stats.level}.
+          As habilidades devem ser coerentes com o objetivo: ${stats.customGoal || stats.goal}.` 
+        }] 
+      }],
       config: {
         responseMimeType: "application/json",
         responseSchema: { type: Type.ARRAY, items: SKILL_SCHEMA }
