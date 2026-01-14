@@ -1,28 +1,29 @@
 
 import React, { useState, useEffect } from 'react';
 import { Quest } from '../types';
-import { Plus, Coins, TrendingUp, Clock, Activity, ShieldAlert } from 'lucide-react';
+import { Plus, Clock, ShieldAlert } from 'lucide-react';
 
 const QuestTimer: React.FC<{ deadline: string }> = ({ deadline }) => {
   const [timeLeft, setTimeLeft] = useState("");
 
   useEffect(() => {
-    const timer = setInterval(() => {
+    const update = () => {
       const diff = new Date(deadline).getTime() - new Date().getTime();
       if (diff < 0) {
         setTimeLeft("EXPIRADO");
-        clearInterval(timer);
         return;
       }
       const h = Math.floor(diff / (1000 * 3600));
       const m = Math.floor((diff / (1000 * 60)) % 60);
       const s = Math.floor((diff / 1000) % 60);
       setTimeLeft(`${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`);
-    }, 1000);
+    };
+    update();
+    const timer = setInterval(update, 1000);
     return () => clearInterval(timer);
   }, [deadline]);
 
-  return <span>{timeLeft}</span>;
+  return <span className="font-mono">{timeLeft}</span>;
 };
 
 interface QuestWindowProps {
@@ -54,7 +55,7 @@ const QuestWindow: React.FC<QuestWindowProps> = ({ quests, onComplete, onProgres
             <div key={q.id} className={`system-panel cut-corners p-6 border-l-4 ${q.completed ? 'opacity-30 border-green-500' : q.type === 'intervention' ? 'border-purple-500' : 'border-cyan-400'}`}>
               <div className="flex justify-between items-start mb-3">
                 <h3 className="system-font text-xs font-black uppercase italic glow-text">{q.title}</h3>
-                <div className="text-[9px] font-black text-cyan-500 flex items-center gap-1">
+                <div className="text-[9px] font-black text-cyan-500 flex items-center gap-1 bg-black/40 px-2 py-1 cut-corners">
                   <Clock size={10} /> <QuestTimer deadline={q.deadline} />
                 </div>
               </div>
