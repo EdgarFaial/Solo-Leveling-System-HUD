@@ -60,3 +60,16 @@ body {
   border-color: #f59e0b !important;
   background: linear-gradient(45deg, rgba(245, 158, 11, 0.05), transparent) !important;
 }
+/* ADICIONE no final do arquivo: */
+
+/* Anúncios aparecem ao rolar */
+.ad-container {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+.ad-container.visible {
+  opacity: 1;
+  transform: translateY(0);
+}

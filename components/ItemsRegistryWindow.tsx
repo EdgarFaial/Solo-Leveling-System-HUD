@@ -84,13 +84,11 @@ const ItemsRegistryWindow: React.FC<ItemsRegistryWindowProps> = ({ items, onTogg
         ))}
       </div>
     </div>
-    // ADICIONE esta linha em algum lugar apropriado (sugiro após o conteúdo principal):
-<div className="mt-8">
-  <ImmersiveAd section="ItemsRegistryWindow.tsx" />
-</div>
-
-// Por exemplo, em StatusWindow.tsx, adicione APÓS o último bloco de <div className="flex items-center gap-4 p-5...">
-  );
+{filtered.length > 0 && (
+  <div className="mt-8">
+    <ImmersiveAd section="quests" />
+  </div>
+)}  );
 };
 
 export default ItemsRegistryWindow;

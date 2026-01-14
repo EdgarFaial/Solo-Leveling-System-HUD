@@ -1,61 +1,76 @@
-import { GoogleGenAI, Type } from "@google/genai";
 import { Stats, AvailableItem, Quest, Skill } from "../types";
 
-// Chave única customizada (não é do Gemini)
-const CUSTOM_API_KEY = "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";
+// Chave do OpenRouter - usando a que você forneceu
+const OPENROUTER_API_KEY = "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";
+const OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions";
 
-async function getGenerativeModelResponse(config: any) {
+// Modelo do OpenRouter (usando o mesmo que Gemini para compatibilidade)
+const OPENROUTER_MODEL = "google/gemini-2.0-flash-exp:free"; // ou "google/gemini-2.0-flash-thinking-exp:free"
+
+async function getOpenRouterResponse(prompt: string, schema?: any, isArray: boolean = false) {
   try {
-    const ai = new GoogleGenAI({ apiKey: CUSTOM_API_KEY });
-    const response = await ai.models.generateContent(config);
+    const requestBody: any = {
+      model: OPENROUTER_MODEL,
+      messages: [
+        {
+          role: "system",
+          content: "Você é o Arquiteto do Sistema. Sua fala é puramente técnica, autoritária e focada na evolução da unidade. Trate o usuário como uma 'Unidade' ou 'Player'. Responda em português brasileiro."
+        },
+        {
+          role: "user",
+          content: prompt
+        }
+      ],
+      temperature: 0.1,
+      max_tokens: 1000
+    };
+
+    // Se há um schema para resposta estruturada
+    if (schema) {
+      requestBody.response_format = { type: "json_object" };
+    }
+
+    const response = await fetch(OPENROUTER_API_URL, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
+        "Content-Type": "application/json",
+        "HTTP-Referer": "https://solo-leveling-system.vercel.app",
+        "X-Title": "Solo Leveling System HUD"
+      },
+      body: JSON.stringify(requestBody)
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error("OpenRouter API Error:", errorData);
+      throw new Error(`OpenRouter API error: ${response.status} ${response.statusText}`);
+    }
+
+    const data = await response.json();
     
-    if (response) {
-      return response;
+    if (data.choices && data.choices[0] && data.choices[0].message) {
+      const content = data.choices[0].message.content;
+      
+      if (schema) {
+        try {
+          const parsed = JSON.parse(content);
+          return isArray ? parsed : { quests: Array.isArray(parsed) ? parsed : [parsed] };
+        } catch (e) {
+          console.error("Failed to parse JSON:", content);
+          return isArray ? [] : { quests: [] };
+        }
+      }
+      
+      return content;
     }
-    throw new Error("Resposta vazia do modelo");
+    
+    throw new Error("Resposta inválida da API");
   } catch (e: any) {
-    const status = e?.status || e?.target?.status;
-    if (status === 429 || status === 400 || status === 401) {
-      throw new Error("Chave de acesso comprometida ou esgotada");
-    }
+    console.error("OpenRouter request failed:", e.message);
     throw e;
   }
 }
-
-const QUEST_SCHEMA = {
-  type: Type.OBJECT,
-  properties: {
-    title: { type: Type.STRING },
-    description: { type: Type.STRING },
-    category: { type: Type.STRING },
-    target: { type: Type.NUMBER },
-    reward: { type: Type.STRING },
-    measurableAction: { type: Type.STRING },
-    timeCommitment: { type: Type.STRING },
-    biologicalBenefit: { type: Type.STRING },
-    adaptationLogic: { type: Type.STRING },
-    estimatedTime: { type: Type.STRING },
-    patternCorrection: { type: Type.STRING },
-    competenceDeveloped: { type: Type.STRING },
-    deadlineDays: { type: Type.NUMBER }
-  },
-  required: ["title", "description", "category", "target", "reward", "measurableAction", "timeCommitment", "biologicalBenefit", "adaptationLogic", "estimatedTime", "patternCorrection", "competenceDeveloped", "deadlineDays"],
-};
-
-const SKILL_SCHEMA = {
-  type: Type.OBJECT,
-  properties: {
-    name: { type: Type.STRING },
-    type: { type: Type.STRING },
-    description: { type: Type.STRING },
-    requirement: { type: Type.STRING },
-    efficiencyBonus: { type: Type.STRING },
-    testTask: { type: Type.STRING },
-    testTarget: { type: Type.NUMBER },
-    testUnit: { type: Type.STRING }
-  },
-  required: ["name", "type", "description", "requirement", "efficiencyBonus", "testTask", "testTarget", "testUnit"]
-};
 
 export async function chatWithArchitect(stats: Stats, message: string, history: {role: string, text: string}[]): Promise<string> {
   if (stats.systemMode === 'custom') {
@@ -63,29 +78,27 @@ export async function chatWithArchitect(stats: Stats, message: string, history: 
   }
   
   try {
-    const response = await getGenerativeModelResponse({
-      model: 'gemini-3-flash-preview',
-      contents: [{
-        parts: [{
-          text: `VOCÊ É O ARQUITETO. Responda como no anime Solo Leveling: frio, técnico, direto, sem emoções humanas.
-          UNIDADE: ${stats.playerName}, Lvl: ${stats.level}. Objetivo: ${stats.customGoal || stats.goal}.
-          MENSAGEM: ${message}`
-        }]
-      }],
-      config: {
-        temperature: 0.1,
-        systemInstruction: "Você é o Arquiteto do Sistema. Sua fala é puramente técnica, autoritária e focada na evolução da unidade. Trate o usuário como uma 'Unidade' ou 'Player'."
-      }
-    });
-    return response.text || "PROTOCOL_FAILURE.";
+    const historyText = history.map(h => `${h.role === 'architect' ? 'ARQUITETO' : 'UNIDADE'}: ${h.text}`).join('\n');
+    
+    const prompt = `UNIDADE: ${stats.playerName}, Nível: ${stats.level}, Idade: ${stats.age}
+Objetivo Principal: ${stats.customGoal || stats.goal}
+Histórico:
+${historyText}
+
+Mensagem atual da UNIDADE: ${message}
+
+Responda como o Arquiteto do Sistema (estilo Solo Leveling): frio, técnico, direto, sem emoções humanas, focado na evolução da unidade.`;
+
+    const response = await getOpenRouterResponse(prompt);
+    return response || "PROTOCOLO FALHOU. Tente novamente.";
   } catch (e: any) {
-    return e.message;
+    console.error("Chat error:", e);
+    return `ERRO DO SISTEMA: ${e.message}. Use o modo livre para continuar.`;
   }
 }
 
 export async function generateDailyQuests(stats: Stats, ownedItems: AvailableItem[], history: Quest[]): Promise<any[]> {
   if (stats.systemMode === 'custom') {
-    // Retorna missões padrão para modo livre
     return [
       {
         title: "ADICIONE SUA PRÓPRIA MISSÃO",
@@ -106,22 +119,38 @@ export async function generateDailyQuests(stats: Stats, ownedItems: AvailableIte
   }
   
   try {
-    const response = await getGenerativeModelResponse({
-      model: 'gemini-3-flash-preview',
-      contents: [{
-        parts: [{
-          text: `Gere exatamente 3 MISSÕES DIÁRIAS (hábitos) para unidade de ${stats.age} anos. 
-          Objetivo principal da Unidade: ${stats.customGoal || stats.goal}.
-          As missões devem ser focadas em desenvolvimento real (Saúde, Foco ou Habilidade).`
-        }]
-      }],
-      config: {
-        responseMimeType: "application/json",
-        responseSchema: { type: Type.ARRAY, items: QUEST_SCHEMA }
-      }
-    });
-    return JSON.parse(response.text || '[]');
+    const itemsStr = ownedItems.filter(i => i.owned).map(i => i.name).join(', ');
+    
+    const prompt = `Gere exatamente 3 MISSÕES DIÁRIAS (hábitos) para uma unidade de ${stats.age} anos.
+Objetivo principal da Unidade: ${stats.customGoal || stats.goal}
+Nível atual: ${stats.level}
+Recursos disponíveis: ${itemsStr || 'Nenhum'}
+
+As missões devem ser:
+1. Focadas em desenvolvimento real (Saúde, Foco ou Habilidade)
+2. Mensuráveis e específicas
+3. Com tempo de execução claro
+4. Com benefício biológico explicado
+
+FORMATO DE RESPOSTA JSON (array de objetos com estas propriedades):
+- title: string (título curto em CAIXA ALTA)
+- description: string (descrição detalhada)
+- category: string (FÍSICO, COGNITIVO, SOCIAL, CONTROLE, BIOHACKING ou RECUPERAÇÃO)
+- target: number (quantidade necessária)
+- reward: string (recompensa descritiva)
+- measurableAction: string (ação mensurável)
+- timeCommitment: string (tempo estimado)
+- biologicalBenefit: string (benefício biológico)
+- adaptationLogic: string (lógica de adaptação)
+- estimatedTime: string (tempo estimado em minutos/horas)
+- patternCorrection: string (correção de padrão)
+- competenceDeveloped: string (competência desenvolvida)
+- deadlineDays: number (dias para conclusão, use 1 para diárias)`;
+
+    const response = await getOpenRouterResponse(prompt, null, true);
+    return Array.isArray(response) ? response : [];
   } catch (error) {
+    console.error("Daily quests error:", error);
     return [];
   }
 }
@@ -132,38 +161,68 @@ export async function generateObjectiveBatch(stats: Stats, ownedItems: Available
   }
   
   try {
-    const itemsStr = ownedItems.map(i => i.name).join(', ');
-    const response = await getGenerativeModelResponse({
-      model: 'gemini-3-flash-preview',
-      contents: [{
-        parts: [{
-          text: `Gere exatamente UMA ÚNICA ORDEM ESTRATÉGICA SEMANAL.
-          A missão deve ser uma AÇÃO CONCRETA E ÚNICA no mundo real (ex: Se inscrever em um curso específico, limpar todo o ambiente de trabalho, organizar as finanças do mês, comprar um livro técnico específico).
-          NÃO pode ser um hábito repetitivo. Deve ter instruções claras de execução passo a passo na descrição.
-          Hardware disponível para a unidade: ${itemsStr}. 
-          Objetivo da Unidade: ${stats.customGoal || stats.goal}.`
-        }]
-      }],
-      config: {
-        responseMimeType: "application/json",
-        responseSchema: {
-          type: Type.OBJECT,
-          properties: {
-            quests: { type: Type.ARRAY, items: QUEST_SCHEMA, minItems: 1, maxItems: 1 }
-          },
-          required: ["quests"]
-        }
-      }
-    });
-    return JSON.parse(response.text || '{"quests": []}');
+    const itemsStr = ownedItems.filter(i => i.owned).map(i => i.name).join(', ');
+    const skillsStr = learnedSkills.filter(s => s.isUnlocked).map(s => s.name).join(', ');
+    
+    const prompt = `Gere exatamente UMA ÚNICA ORDEM ESTRATÉGICA SEMANAL para a unidade.
+DADOS DA UNIDADE:
+- Nome: ${stats.playerName}
+- Idade: ${stats.age}
+- Nível: ${stats.level}
+- Objetivo: ${stats.customGoal || stats.goal}
+- Hardware disponível: ${itemsStr || 'Nenhum'}
+- Habilidades aprendidas: ${skillsStr || 'Nenhuma'}
+
+REQUISITOS DA MISSÃO:
+1. Deve ser uma AÇÃO CONCRETA E ÚNICA no mundo real
+2. NÃO pode ser um hábito repetitivo
+3. Deve ter instruções claras de execução passo a passo
+4. Focar em progresso real e mensurável
+5. Alinhada com o objetivo da unidade
+
+EXEMPLOS VÁLIDOS:
+- "Se inscrever no curso de React Avançado na Udemy"
+- "Organizar e digitalizar todos os documentos fiscais do último ano"
+- "Comprar e ler o livro 'Deep Work' de Cal Newport"
+- "Configurar ambiente de desenvolvimento com Docker"
+
+EXEMPLOS INVÁLIDOS (NÃO USAR):
+- "Fazer exercícios diários" (muito genérico)
+- "Estudar programação" (não específico)
+- "Melhorar alimentação" (não mensurável)
+
+FORMATO JSON (um único objeto dentro de um array "quests"):
+{
+  "quests": [
+    {
+      "title": "string",
+      "description": "string (instruções passo a passo)",
+      "category": "string",
+      "target": 1,
+      "reward": "string",
+      "measurableAction": "string",
+      "timeCommitment": "string",
+      "biologicalBenefit": "string",
+      "adaptationLogic": "string",
+      "estimatedTime": "string",
+      "patternCorrection": "string",
+      "competenceDeveloped": "string",
+      "deadlineDays": 7
+    }
+  ]
+}`;
+
+    const response = await getOpenRouterResponse(prompt);
+    return response || { quests: [] };
   } catch (error) {
+    console.error("Objective batch error:", error);
     return { quests: [] };
   }
 }
 
 export async function fillSkillPool(stats: Stats, currentCount: number): Promise<Skill[]> {
   if (stats.systemMode === 'custom') {
-    // No modo livre, retorna habilidades básicas sugeridas
+    // Habilidades básicas para modo livre
     const basicSkills = [
       {
         name: "FOCO CONCENTRADO",
@@ -184,6 +243,16 @@ export async function fillSkillPool(stats: Stats, currentCount: number): Promise
         testTask: "Acordar no horário planejado",
         testTarget: 5,
         testUnit: "dias consecutivos"
+      },
+      {
+        name: "RESISTÊNCIA ISOMÉTRICA",
+        type: "MOTORA",
+        description: "Manutenção de posições estáticas por tempo prolongado.",
+        requirement: "Nível 1+",
+        efficiencyBonus: "+5 em VITALIDADE",
+        testTask: "Manter prancha abdominal",
+        testTarget: 60,
+        testUnit: "segundos"
       }
     ];
     
@@ -201,23 +270,44 @@ export async function fillSkillPool(stats: Stats, currentCount: number): Promise
   if (needed <= 0) return [];
   
   try {
-    const response = await getGenerativeModelResponse({
-      model: 'gemini-3-flash-preview',
-      contents: [{ 
-        parts: [{ 
-          text: `Gere exatamente ${needed} novas habilidades (skills) sugeridas para evolução da unidade nível ${stats.level}.
-          As habilidades devem ser coerentes com o objetivo: ${stats.customGoal || stats.goal}.` 
-        }] 
-      }],
-      config: {
-        responseMimeType: "application/json",
-        responseSchema: { type: Type.ARRAY, items: SKILL_SCHEMA }
-      }
-    });
-    const result = JSON.parse(response.text || '[]');
-    return result.map((s: any) => ({ ...s, id: `sk-gen-${Date.now()}-${Math.random()}`, level: 1, isUnlocked: false, isDynamic: true }));
+    const prompt = `Gere exatamente ${needed} novas habilidades (skills) para evolução da unidade.
+DADOS:
+- Nível da unidade: ${stats.level}
+- Idade: ${stats.age}
+- Objetivo: ${stats.customGoal || stats.goal}
+
+REQUISITOS DAS HABILIDADES:
+1. Devem ser realistas e alcançáveis
+2. Cada habilidade deve ter um teste específico
+3. Focar em desenvolvimento pessoal real
+4. Incluir bônus de eficiência realista
+
+FORMATO JSON (array de objetos):
+[
+  {
+    "name": "string (nome em CAIXA ALTA)",
+    "type": "string (COGNITIVA, MOTORA, SOCIAL ou ESTRATÉGICA)",
+    "description": "string",
+    "requirement": "string",
+    "efficiencyBonus": "string",
+    "testTask": "string",
+    "testTarget": number,
+    "testUnit": "string"
+  }
+]`;
+
+    const response = await getOpenRouterResponse(prompt, null, true);
+    const result = Array.isArray(response) ? response : [];
+    
+    return result.map((s: any) => ({ 
+      ...s, 
+      id: `sk-gen-${Date.now()}-${Math.random()}`, 
+      level: 1, 
+      isUnlocked: false, 
+      isDynamic: true 
+    }));
   } catch (error) {
+    console.error("Fill skill pool error:", error);
     return [];
   }
-  
 }

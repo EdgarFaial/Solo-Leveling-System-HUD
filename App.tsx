@@ -232,21 +232,113 @@ const handleDeleteSkill = (id: string) => {
     setIsAwakened(true);
   };
 
-  if (!isAwakened) {
-    return (
-      <div className="h-[100dvh] w-full bg-[#010a12] flex items-center justify-center p-6 text-cyan-400 overflow-hidden">
-        <div className="w-full max-w-sm system-panel border-cyan-400 cut-corners p-8 bg-cyan-950/20 space-y-6">
-          <h1 className="text-4xl font-black system-font text-center glow-text italic tracking-wider">ERGA-SE</h1>
-          <div className="space-y-4">
-            <input id="n" placeholder="NOME..." className="w-full bg-black/40 border-b border-cyan-400/40 p-3 text-white uppercase outline-none focus:border-cyan-400" />
-            <input id="a" type="number" placeholder="IDADE..." className="w-full bg-black/40 border-b border-cyan-400/40 p-3 text-white outline-none focus:border-cyan-400" />
-            <textarea id="g" placeholder="OBJETIVO PRINCIPAL..." className="w-full bg-black/40 border border-cyan-400/40 p-3 text-white text-[11px] h-24 outline-none resize-none focus:border-cyan-400" />
-          </div>
-          <button onClick={() => handleAwakening((document.getElementById('n') as any).value, parseInt((document.getElementById('a') as any).value), (document.getElementById('g') as any).value)} className="w-full bg-cyan-400 text-black font-black py-4 uppercase italic tracking-widest active:scale-95 transition-all">ATIVAR SISTEMA</button>
-        </div>
+// SUBSTITUA TODO O BLOCO if (!isAwakened) { ... } por:
+
+if (!isAwakened) {
+  const [selectedMode, setSelectedMode] = useState<'architect' | 'custom'>('architect');
+  const [step, setStep] = useState<'mode' | 'info'>('mode');
+
+  const handleModeSelect = (mode: 'architect' | 'custom') => {
+    setSelectedMode(mode);
+    setStep('info');
+  };
+
+  const handleAwakening = (name: string, age: number, goal: string) => {
+    if(!name || !age || !goal) return;
+    const finalStats: Stats = { 
+      ...INITIAL_STATS, 
+      playerName: name.toUpperCase(), 
+      age, 
+      customGoal: goal, 
+      systemMode: selectedMode  // ADICIONE ESTA LINHA
+    };
+    setStats(finalStats);
+    if (selectedMode === 'architect') {
+      triggerInitialBatch(finalStats);
+    }
+    setIsAwakened(true);
+  };
+
+  return (
+    <div className="h-[100dvh] w-full bg-[#010a12] flex items-center justify-center p-6 text-cyan-400 overflow-hidden">
+      <div className="w-full max-w-sm system-panel border-cyan-400 cut-corners p-8 bg-cyan-950/20 space-y-6">
+        {step === 'mode' ? (
+          <>
+            <h1 className="text-4xl font-black system-font text-center glow-text italic tracking-wider">ERGA-SE</h1>
+            <p className="text-[11px] text-gray-400 text-center uppercase italic font-bold">
+              Selecione o modo de operação do Sistema:
+            </p>
+            
+            <div className="space-y-4">
+              <button 
+                onClick={() => handleModeSelect('architect')}
+                className={`w-full p-5 cut-corners border-2 text-left transition-all ${selectedMode === 'architect' ? 'border-cyan-400 bg-cyan-400/10' : 'border-gray-700 hover:border-cyan-400/50'}`}
+              >
+                <div className="flex items-center gap-3 mb-2">
+                  <div className={`w-3 h-3 rounded-full ${selectedMode === 'architect' ? 'bg-cyan-400' : 'bg-gray-700'}`}></div>
+                  <h3 className="system-font text-cyan-400 text-sm font-black uppercase">MODO ARQUITETO</h3>
+                </div>
+                <p className="text-[10px] text-gray-400 uppercase italic">
+                  IA Gemini personaliza missões baseadas em seus dados. Evolução guiada pelo Arquiteto.
+                </p>
+              </button>
+              
+              <button 
+                onClick={() => handleModeSelect('custom')}
+                className={`w-full p-5 cut-corners border-2 text-left transition-all ${selectedMode === 'custom' ? 'border-yellow-500 bg-yellow-500/10' : 'border-gray-700 hover:border-yellow-500/50'}`}
+              >
+                <div className="flex items-center gap-3 mb-2">
+                  <div className={`w-3 h-3 rounded-full ${selectedMode === 'custom' ? 'bg-yellow-500' : 'bg-gray-700'}`}></div>
+                  <h3 className="system-font text-yellow-500 text-sm font-black uppercase">MODO LIVRE</h3>
+                </div>
+                <p className="text-[10px] text-gray-400 uppercase italic">
+                  Crie suas próprias missões e habilidades. Controle total sobre sua evolução.
+                </p>
+              </button>
+            </div>
+            
+            <button 
+              onClick={() => setStep('info')}
+              className="w-full bg-cyan-400 text-black font-black py-4 uppercase italic tracking-widest active:scale-95 transition-all mt-4"
+            >
+              CONTINUAR
+            </button>
+          </>
+        ) : (
+          <>
+            <h1 className="text-4xl font-black system-font text-center glow-text italic tracking-wider">
+              {selectedMode === 'architect' ? 'VINCULAR AO ARQUITETO' : 'MODO LIVRE ATIVADO'}
+            </h1>
+            <div className="space-y-4">
+              <input id="n" placeholder="NOME..." className="w-full bg-black/40 border-b border-cyan-400/40 p-3 text-white uppercase outline-none focus:border-cyan-400" />
+              <input id="a" type="number" placeholder="IDADE..." className="w-full bg-black/40 border-b border-cyan-400/40 p-3 text-white outline-none focus:border-cyan-400" />
+              <textarea id="g" placeholder="OBJETIVO PRINCIPAL..." className="w-full bg-black/40 border border-cyan-400/40 p-3 text-white text-[11px] h-24 outline-none resize-none focus:border-cyan-400" />
+            </div>
+            
+            <div className="flex gap-3">
+              <button 
+                onClick={() => setStep('mode')}
+                className="flex-1 bg-gray-800 text-gray-400 font-black py-4 uppercase italic tracking-widest active:scale-95 transition-all"
+              >
+                VOLTAR
+              </button>
+              <button 
+                onClick={() => handleAwakening(
+                  (document.getElementById('n') as any).value, 
+                  parseInt((document.getElementById('a') as any).value), 
+                  (document.getElementById('g') as any).value
+                )} 
+                className="flex-1 bg-cyan-400 text-black font-black py-4 uppercase italic tracking-widest active:scale-95 transition-all"
+              >
+                {selectedMode === 'architect' ? 'ATIVAR SISTEMA' : 'INICIAR MODO LIVRE'}
+              </button>
+            </div>
+          </>
+        )}
       </div>
-    );
-  }
+    </div>
+  );
+}
 
   return (
     <div className="h-[100dvh] w-screen bg-[#02060a] text-white flex flex-col font-['Rajdhani'] overflow-hidden relative">

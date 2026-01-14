@@ -135,10 +135,12 @@ const StatusWindow: React.FC<StatusWindowProps> = ({ stats, onAllocate }) => {
         </p>
       </div>
     </div>
-    // ADICIONE esta linha em algum lugar apropriado (sugiro após o conteúdo principal):
-<div className="mt-8">
-  <ImmersiveAd section="StatusWindow.tsx" />
-</div>
+    
+{filtered.length > 0 && (
+  <div className="mt-8">
+    <ImmersiveAd section="quests" />
+  </div>
+)}
 
   );
 };
