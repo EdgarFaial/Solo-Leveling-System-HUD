@@ -1,58 +1,25 @@
-
 import { GoogleGenAI, Type } from "@google/genai";
 import { Stats, AvailableItem, Quest, Skill } from "../types";
 
-// Chaves de API em ordem de prioridade
-const API_KEYS = [
-  process.env.API_KEY,
-  "AIzaSyBG8lcJlk0zS1719in_0x9P6b5iYDH-evM",
-  "AIzaSyA_KuBX8TxN-ZpSSr_Q30gB9TmDchkV9L8",
-  "AIzaSyA1u1yTFWTi1PF5FIw5cf1AFzPlX58-l1A",
-  "AIzaSyA_JMzqfmPDmLVhagttKfFhgU9LYrbOl4Q",
-  "AIzaSyDIkoO-nNj_3ttpR9HLwVZ134CCOOSV78g"
-].filter(Boolean) as string[];
-
-// Recupera o último índice funcional ou começa do 0
-let currentKeyIndex = parseInt(localStorage.getItem('sl_api_index') || '0');
+// Chave única customizada (não é do Gemini)
+const CUSTOM_API_KEY = "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";
 
 async function getGenerativeModelResponse(config: any) {
-  let lastError = null;
-  const totalKeys = API_KEYS.length;
-
-  // Tenta as chaves começando do índice atual até percorrer todas (loop circular)
-  for (let attempt = 0; attempt < totalKeys; attempt++) {
-    const i = (currentKeyIndex + attempt) % totalKeys;
-    const key = API_KEYS[i];
+  try {
+    const ai = new GoogleGenAI({ apiKey: CUSTOM_API_KEY });
+    const response = await ai.models.generateContent(config);
     
-    try {
-      const ai = new GoogleGenAI({ apiKey: key });
-      const response = await ai.models.generateContent(config);
-      
-      if (response) {
-        // Sucesso: atualiza o índice funcional e salva
-        if (currentKeyIndex !== i) {
-          currentKeyIndex = i;
-          localStorage.setItem('sl_api_index', i.toString());
-        }
-        return response;
-      }
-    } catch (e: any) {
-      lastError = e;
-      // Captura códigos de erro comuns de limite ou chave
-      const status = e?.status || e?.target?.status;
-      
-      // Se for erro de quota (429), chave inválida (400) ou não autorizada (401), tenta a próxima
-      if (status === 429 || status === 400 || status === 401) {
-        console.warn(`Sistema: Chave de acesso [${i}] comprometida ou esgotada. Código: ${status}. Iniciando protocolo de redirecionamento...`);
-        continue;
-      }
-      
-      // Para erros de rede local ou desconhecidos, não queima a próxima chave imediatamente
-      throw e; 
+    if (response) {
+      return response;
     }
+    throw new Error("Resposta vazia do modelo");
+  } catch (e: any) {
+    const status = e?.status || e?.target?.status;
+    if (status === 429 || status === 400 || status === 401) {
+      throw new Error("Chave de acesso comprometida ou esgotada");
+    }
+    throw e;
   }
-
-  throw new Error("O Arquiteto não está disponível. Todas as chaves de acesso excederam o limite ou estão inválidas. Protocolo de espera ativado.");
 }
 
 const QUEST_SCHEMA = {
@@ -91,6 +58,10 @@ const SKILL_SCHEMA = {
 };
 
 export async function chatWithArchitect(stats: Stats, message: string, history: {role: string, text: string}[]): Promise<string> {
+  if (stats.systemMode === 'custom') {
+    return "MODO LIVRE ATIVADO. Sem respostas automáticas do Arquiteto. Use o modo manual.";
+  }
+  
   try {
     const response = await getGenerativeModelResponse({
       model: 'gemini-3-flash-preview',
@@ -113,6 +84,27 @@ export async function chatWithArchitect(stats: Stats, message: string, history: 
 }
 
 export async function generateDailyQuests(stats: Stats, ownedItems: AvailableItem[], history: Quest[]): Promise<any[]> {
+  if (stats.systemMode === 'custom') {
+    // Retorna missões padrão para modo livre
+    return [
+      {
+        title: "ADICIONE SUA PRÓPRIA MISSÃO",
+        description: "No modo livre, você cria suas próprias missões. Clique no botão + para adicionar.",
+        category: "CUSTOM",
+        target: 1,
+        reward: "Auto-Progresso",
+        measurableAction: "Criar objetivo pessoal",
+        timeCommitment: "Flexível",
+        biologicalBenefit: "Desenvolvimento de autonomia",
+        adaptationLogic: "Auto-gestão",
+        estimatedTime: "Variável",
+        patternCorrection: "Customizável",
+        competenceDeveloped: "Auto-disciplina",
+        deadlineDays: 1
+      }
+    ];
+  }
+  
   try {
     const response = await getGenerativeModelResponse({
       model: 'gemini-3-flash-preview',
@@ -135,6 +127,10 @@ export async function generateDailyQuests(stats: Stats, ownedItems: AvailableIte
 }
 
 export async function generateObjectiveBatch(stats: Stats, ownedItems: AvailableItem[], learnedSkills: Skill[]): Promise<{quests: any[]}> {
+  if (stats.systemMode === 'custom') {
+    return { quests: [] };
+  }
+  
   try {
     const itemsStr = ownedItems.map(i => i.name).join(', ');
     const response = await getGenerativeModelResponse({
@@ -166,6 +162,41 @@ export async function generateObjectiveBatch(stats: Stats, ownedItems: Available
 }
 
 export async function fillSkillPool(stats: Stats, currentCount: number): Promise<Skill[]> {
+  if (stats.systemMode === 'custom') {
+    // No modo livre, retorna habilidades básicas sugeridas
+    const basicSkills = [
+      {
+        name: "FOCO CONCENTRADO",
+        type: "COGNITIVA",
+        description: "Capacidade de manter atenção prolongada em uma única tarefa.",
+        requirement: "Nível 1+",
+        efficiencyBonus: "+10% EXP em missões cognitivas",
+        testTask: "Estudar/trabalhar sem interrupções",
+        testTarget: 25,
+        testUnit: "minutos"
+      },
+      {
+        name: "DISCIPLINA MATINAL",
+        type: "MOTORA",
+        description: "Execução consistente de rotina matinal.",
+        requirement: "Nível 2+",
+        efficiencyBonus: "+5 em VONTADE",
+        testTask: "Acordar no horário planejado",
+        testTarget: 5,
+        testUnit: "dias consecutivos"
+      }
+    ];
+    
+    const needed = Math.max(0, 5 - currentCount);
+    return basicSkills.slice(0, needed).map((s: any) => ({ 
+      ...s, 
+      id: `sk-custom-${Date.now()}-${Math.random()}`, 
+      level: 1, 
+      isUnlocked: false, 
+      isDynamic: true 
+    }));
+  }
+  
   const needed = 5 - currentCount;
   if (needed <= 0) return [];
   
@@ -188,4 +219,5 @@ export async function fillSkillPool(stats: Stats, currentCount: number): Promise
   } catch (error) {
     return [];
   }
+  
 }

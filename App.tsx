@@ -3,6 +3,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { 
   Shield, ScrollText, Brain, ShieldCheck, MessageSquare, Coins, Plus
 } from 'lucide-react';
+import CustomModePanel from './components/CustomModePanel';
+import { CustomQuestData, CustomSkillData } from './types';
 import StatusWindow from './components/StatusWindow';
 import QuestWindow from './components/QuestWindow';
 import InventoryWindow from './components/InventoryWindow';
@@ -36,6 +38,68 @@ const App: React.FC = () => {
   ]);
 
   const [quests, setQuests] = useState<Quest[]>([]);
+
+
+// ADICIONE estas funções dentro do componente App, após os outros estados:
+
+const handleAddCustomQuest = (questData: CustomQuestData) => {
+  const deadline = new Date();
+  deadline.setDate(deadline.getDate() + questData.deadlineDays);
+  
+  const newQuest: Quest = {
+    id: `custom-quest-${Date.now()}`,
+    title: questData.title,
+    description: questData.description,
+    protocol: "CUSTOM",
+    progress: 0,
+    target: questData.target,
+    type: 'daily',
+    category: questData.category as any,
+    completed: false,
+    deadline: deadline.toISOString(),
+    reward: questData.reward,
+    goldReward: 50,
+    expReward: 25,
+    measurableAction: "Personalizado",
+    timeCommitment: "Flexível",
+    biologicalBenefit: "Auto-desenvolvimento",
+    adaptationLogic: "Customizado",
+    estimatedTime: "Variável",
+    patternCorrection: "Personalizado",
+    competenceDeveloped: "Auto-gestão",
+    isUserCreated: true
+  };
+  
+  setQuests(prev => [...prev, newQuest]);
+};
+
+const handleAddCustomSkill = (skillData: CustomSkillData) => {
+  const newSkill: Skill = {
+    id: `custom-skill-${Date.now()}`,
+    name: skillData.name,
+    level: 1,
+    type: skillData.type,
+    description: skillData.description,
+    requirement: "Nível 1+",
+    efficiencyBonus: "+5% em tarefas relacionadas",
+    isUnlocked: false,
+    testTask: skillData.testTask,
+    testTarget: skillData.testTarget,
+    testUnit: skillData.testUnit,
+    isDynamic: true
+  };
+  
+  setSkills(prev => [...prev, newSkill]);
+};
+
+const handleDeleteQuest = (id: string) => {
+  setQuests(prev => prev.filter(q => q.id !== id));
+};
+
+const handleDeleteSkill = (id: string) => {
+  setSkills(prev => prev.filter(s => s.id !== id));
+};
+
 
   // 1. Carregamento de Estado Inicial
   useEffect(() => {

@@ -2,6 +2,7 @@
 import React from 'react';
 import { Stats, calculateRank } from '../types';
 import { Shield, Zap, Eye, Brain, Dumbbell, Plus, BarChart3, Info, Target } from 'lucide-react';
+import ImmersiveAd from './ImmersiveAd';  // ou '../components/ImmersiveAd' dependendo da estrutura
 
 interface StatusWindowProps {
   stats: Stats;
@@ -134,6 +135,11 @@ const StatusWindow: React.FC<StatusWindowProps> = ({ stats, onAllocate }) => {
         </p>
       </div>
     </div>
+    // ADICIONE esta linha em algum lugar apropriado (sugiro após o conteúdo principal):
+<div className="mt-8">
+  <ImmersiveAd section="StatusWindow.tsx" />
+</div>
+
   );
 };
 

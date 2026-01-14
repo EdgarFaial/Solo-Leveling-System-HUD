@@ -1,6 +1,7 @@
 
 export interface Stats {
   playerName: string;
+  
   age: number;
   goal: string;
   customGoal?: string;
@@ -152,3 +153,43 @@ export const INITIAL_STATS: Stats = {
   systemMode: 'architect',
   avatar: '👤'
 };
+export interface CustomQuestData {
+  title: string;
+  description: string;
+  category: QuestCategory;
+  target: number;
+  reward: string;
+  deadlineDays: number;
+}
+
+export interface CustomSkillData {
+  name: string;
+  description: string;
+  type: 'COGNITIVA' | 'MOTORA' | 'SOCIAL' | 'ESTRATÉGICA';
+  testTask: string;
+  testTarget: number;
+  testUnit: string;
+}
+// ADICIONE ESTAS INTERFACES no final do arquivo types.ts (antes do último }):
+
+export interface CustomQuestData {
+  title: string;
+  description: string;
+  category: QuestCategory;
+  target: number;
+  reward: string;
+  deadlineDays: number;
+}
+
+export interface CustomSkillData {
+  name: string;
+  description: string;
+  type: 'COGNITIVA' | 'MOTORA' | 'SOCIAL' | 'ESTRATÉGICA';
+  testTask: string;
+  testTarget: number;
+  testUnit: string;
+}
+
+
+
+

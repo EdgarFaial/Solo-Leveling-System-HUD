@@ -17,6 +17,56 @@
       --panel-bg: rgba(6, 26, 35, 0.85);
     }
     
+/* ADICIONE ESTES ESTILOS dentro da tag <style> existente: */
+
+/* Anúncios imersivos - ADICIONE ESTE BLOCO: */
+.ad-container {
+  background: rgba(6, 26, 35, 0.9);
+  border: 1px solid rgba(0, 229, 255, 0.2);
+  backdrop-filter: blur(10px);
+  margin: 20px 0;
+  padding: 15px;
+  border-radius: 8px;
+  position: relative;
+  overflow: hidden;
+}
+
+.ad-container::before {
+  content: "PUBLICIDADE DO SISTEMA";
+  position: absolute;
+  top: 5px;
+  left: 10px;
+  font-size: 8px;
+  color: rgba(0, 229, 255, 0.5);
+  font-family: 'Orbitron', sans-serif;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+/* Scrollbar melhorada - ADICIONE ESTE BLOCO: */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 229, 255, 0.3) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 6px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: rgba(0, 229, 255, 0.3);
+  border-radius: 10px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 229, 255, 0.5);
+}
+
     body {
       margin: 0;
       padding: 0;

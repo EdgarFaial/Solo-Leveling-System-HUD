@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Quest } from '../types';
 import { Plus, Clock, ShieldAlert } from 'lucide-react';
+import ImmersiveAd from './ImmersiveAd';  // ou '../components/ImmersiveAd' dependendo da estrutura
 
 const QuestTimer: React.FC<{ deadline: string }> = ({ deadline }) => {
   const [timeLeft, setTimeLeft] = useState("");
@@ -87,6 +88,12 @@ const QuestWindow: React.FC<QuestWindowProps> = ({ quests, onComplete, onProgres
         )}
       </div>
     </div>
+    // ADICIONE esta linha em algum lugar apropriado (sugiro após o conteúdo principal):
+<div className="mt-8">
+  <ImmersiveAd section="QuestWindow.tsx" />
+</div>
+
+// Por exemplo, em StatusWindow.tsx, adicione APÓS o último bloco de <div className="flex items-center gap-4 p-5...">
   );
 };
 
