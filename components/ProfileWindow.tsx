@@ -1,7 +1,6 @@
-
 import React, { useState, useRef } from 'react';
 import { Stats } from '../types';
-import { User, Save, X, Camera, Shield, Crown, Zap, Eye, Brain, Activity, Hexagon, Ghost } from 'lucide-react';
+import { User, Save, X, Camera } from 'lucide-react';
 
 interface ProfileWindowProps {
   stats: Stats;
@@ -26,20 +25,19 @@ const ProfileWindow: React.FC<ProfileWindowProps> = ({ stats, onSave, onClose })
   const [age, setAge] = useState(stats.age);
   const [goal, setGoal] = useState(stats.customGoal || "");
   const [avatar, setAvatar] = useState(stats.avatar || HUD_ICONS[0]);
+  const [mode, setMode] = useState(stats.systemMode);
   const fileInputRef = useRef<HTMLInputElement>(null);
-const [mode, setMode] = useState(stats.systemMode);
 
   const handleSave = () => {
-  // MODIFIQUE a chamada onSave para incluir systemMode:
-  onSave({ 
-    playerName: name.toUpperCase(), 
-    age, 
-    customGoal: goal, 
-    avatar,
-    systemMode: mode  // ADICIONE ESTA LINHA
-  });
-  onClose();
-};
+    onSave({ 
+      playerName: name.toUpperCase(), 
+      age, 
+      customGoal: goal, 
+      avatar,
+      systemMode: mode
+    });
+    onClose();
+  };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -108,6 +106,28 @@ const [mode, setMode] = useState(stats.systemMode);
               <label className="text-[8px] text-gray-600 font-black uppercase tracking-widest">Ciclo de Idade:</label>
               <input type="number" value={age} onChange={e => setAge(parseInt(e.target.value) || 0)} className="w-full bg-black/20 border-b border-cyan-400/40 p-2 text-white font-black outline-none focus:border-cyan-400 transition-colors" />
             </div>
+            
+            {/* Campo Modo do Sistema - AGORA CORRETAMENTE POSICIONADO */}
+            <div className="space-y-1">
+              <label className="text-[8px] text-gray-600 font-black uppercase tracking-widest">Modo do Sistema:</label>
+              <div className="flex gap-2">
+                <button 
+                  type="button"
+                  onClick={() => setMode('architect')}
+                  className={`flex-1 py-3 cut-corners border text-[10px] font-black uppercase italic ${mode === 'architect' ? 'border-cyan-400 text-cyan-400 bg-cyan-400/10' : 'border-gray-700 text-gray-500 bg-black/20'}`}
+                >
+                  ARQUITETO (IA)
+                </button>
+                <button 
+                  type="button"
+                  onClick={() => setMode('custom')}
+                  className={`flex-1 py-3 cut-corners border text-[10px] font-black uppercase italic ${mode === 'custom' ? 'border-yellow-500 text-yellow-400 bg-yellow-500/10' : 'border-gray-700 text-gray-500 bg-black/20'}`}
+                >
+                  LIVRE (MANUAL)
+                </button>
+              </div>
+            </div>
+
             <div className="space-y-1">
               <label className="text-[8px] text-gray-600 font-black uppercase tracking-widest">Objetivo Direcionador:</label>
               <textarea value={goal} onChange={e => setGoal(e.target.value)} className="w-full bg-black/20 border border-cyan-400/40 p-3 text-white font-black uppercase text-[10px] outline-none h-20 resize-none focus:border-cyan-400 transition-colors" />
@@ -120,26 +140,6 @@ const [mode, setMode] = useState(stats.systemMode);
         </div>
       </div>
     </div>
-    // ADICIONE este bloco após o campo de idade:
-<div className="space-y-1">
-  <label className="text-[8px] text-gray-600 font-black uppercase tracking-widest">Modo do Sistema:</label>
-  <div className="flex gap-2">
-    <button 
-      type="button"
-      onClick={() => setMode('architect')}
-      className={`flex-1 py-3 cut-corners border text-[10px] font-black uppercase italic ${mode === 'architect' ? 'border-cyan-400 text-cyan-400 bg-cyan-400/10' : 'border-gray-700 text-gray-500 bg-black/20'}`}
-    >
-      ARQUITETO (IA)
-    </button>
-    <button 
-      type="button"
-      onClick={() => setMode('custom')}
-      className={`flex-1 py-3 cut-corners border text-[10px] font-black uppercase italic ${mode === 'custom' ? 'border-yellow-500 text-yellow-400 bg-yellow-500/10' : 'border-gray-700 text-gray-500 bg-black/20'}`}
-    >
-      LIVRE (MANUAL)
-    </button>
-  </div>
-</div>
   );
 };
 
