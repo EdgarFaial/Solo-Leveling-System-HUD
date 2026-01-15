@@ -1,9 +1,7 @@
-
 import React from 'react';
 import { Item } from '../types';
-// Fix: Consolidate lucide-react imports at the top
 import { Backpack, Info, Lock, Zap, Package } from 'lucide-react';
-import ImmersiveAd from './ImmersiveAd';  // ou '../components/ImmersiveAd' dependendo da estrutura
+import ImmersiveAd from './ImmersiveAd';
 
 interface InventoryWindowProps {
   items: Item[];
@@ -67,12 +65,12 @@ const InventoryWindow: React.FC<InventoryWindowProps> = ({ items }) => {
           </p>
         </div>
       </div>
+
+      <div className="mt-8">
+        <ImmersiveAd section="inventory" />
+      </div>
     </div>
-{filtered.length > 0 && (
-  <div className="mt-8">
-    <ImmersiveAd section="quests" />
-  </div>
-)}  );
+  );
 };
 
 export default InventoryWindow;

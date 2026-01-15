@@ -1,8 +1,7 @@
-
 import React from 'react';
 import { AvailableItem } from '../types';
 import { ShieldCheck, Check, Zap, Info, Box } from 'lucide-react';
-import ImmersiveAd from './ImmersiveAd';  // ou '../components/ImmersiveAd' dependendo da estrutura
+import ImmersiveAd from './ImmersiveAd';
 
 interface ItemsRegistryWindowProps {
   items: AvailableItem[];
@@ -83,12 +82,12 @@ const ItemsRegistryWindow: React.FC<ItemsRegistryWindowProps> = ({ items, onTogg
           </div>
         ))}
       </div>
+
+      <div className="mt-8">
+        <ImmersiveAd section="registry" />
+      </div>
     </div>
-{filtered.length > 0 && (
-  <div className="mt-8">
-    <ImmersiveAd section="quests" />
-  </div>
-)}  );
+  );
 };
 
 export default ItemsRegistryWindow;

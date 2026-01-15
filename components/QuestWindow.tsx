@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Quest } from '../types';
 import { Plus, Clock, ShieldAlert } from 'lucide-react';
-import ImmersiveAd from './ImmersiveAd'; // ADICIONE ESTA LINHA
+import ImmersiveAd from './ImmersiveAd';
 
 const QuestTimer: React.FC<{ deadline: string }> = ({ deadline }) => {
   const [timeLeft, setTimeLeft] = useState("");
@@ -35,7 +35,6 @@ interface QuestWindowProps {
 const QuestWindow: React.FC<QuestWindowProps> = ({ quests, onComplete, onProgress }) => {
   const [activeTab, setActiveTab] = useState<'daily' | 'intervention'>('daily');
 
-  // CORREÇÃO: Calcular filtered dentro do componente
   const filtered = quests.filter(q => q.type === activeTab);
 
   return (
@@ -97,7 +96,6 @@ const QuestWindow: React.FC<QuestWindowProps> = ({ quests, onComplete, onProgres
               </div>
             ))}
             
-            {/* ANÚNCIO - MOVENDO PARA FORA DO MAP */}
             <div className="mt-8">
               <ImmersiveAd section="quests" />
             </div>

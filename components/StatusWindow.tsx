@@ -1,148 +1,109 @@
+import React, { useState, useEffect } from 'react';
+import { Quest } from '../types';
+import { Plus, Clock, ShieldAlert } from 'lucide-react';
+import ImmersiveAd from './ImmersiveAd';
 
-import React from 'react';
-import { Stats, calculateRank } from '../types';
-import { Shield, Zap, Eye, Brain, Dumbbell, Plus, BarChart3, Info, Target } from 'lucide-react';
-import ImmersiveAd from './ImmersiveAd';  // ou '../components/ImmersiveAd' dependendo da estrutura
+const QuestTimer: React.FC<{ deadline: string }> = ({ deadline }) => {
+  const [timeLeft, setTimeLeft] = useState("");
 
-interface StatusWindowProps {
-  stats: Stats;
-  onAllocate: (stat: string) => void;
+  useEffect(() => {
+    const update = () => {
+      const diff = new Date(deadline).getTime() - new Date().getTime();
+      if (diff < 0) {
+        setTimeLeft("EXPIRADO");
+        return;
+      }
+      const h = Math.floor(diff / (1000 * 3600));
+      const m = Math.floor((diff / (1000 * 60)) % 60);
+      const s = Math.floor((diff / 1000) % 60);
+      setTimeLeft(`${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`);
+    };
+    update();
+    const timer = setInterval(update, 1000);
+    return () => clearInterval(timer);
+  }, [deadline]);
+
+  return <span className="font-mono">{timeLeft}</span>;
+};
+
+interface QuestWindowProps {
+  quests: Quest[];
+  onComplete: (id: string) => void;
+  onProgress: (id: string) => void;
 }
 
-const StatusWindow: React.FC<StatusWindowProps> = ({ stats, onAllocate }) => {
-  const attributes = [
-    { key: 'strength', label: 'FORÇA', icon: Dumbbell },
-    { key: 'agility', label: 'AGILIDADE', icon: Zap },
-    { key: 'vitality', label: 'VITALIDADE', icon: Shield },
-    { key: 'intelligence', label: 'INTELIGÊNCIA', icon: Brain },
-    { key: 'sense', label: 'SENTIDOS', icon: Eye },
-    { key: 'will', label: 'VONTADE', icon: BarChart3 },
-  ];
+const QuestWindow: React.FC<QuestWindowProps> = ({ quests, onComplete, onProgress }) => {
+  const [activeTab, setActiveTab] = useState<'daily' | 'intervention'>('daily');
+
+  const filtered = quests.filter(q => q.type === activeTab);
 
   return (
-    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-10 duration-700">
-      
-      {/* Header Estilo Solo Leveling com Classe e Rank */}
-      <div className="relative p-6 system-panel cut-corners border-l-4 border-cyan-400 bg-cyan-950/10">
-        <div className="absolute top-2 right-4 text-[8px] font-black text-cyan-500 tracking-[0.4em] uppercase opacity-50 italic">
-          Telemetria Biológica Ativa
-        </div>
-        
-        <div className="flex items-end justify-between mb-4">
-          <div className="space-y-1">
-            <h2 className="system-font text-3xl font-black text-white glow-text italic tracking-tighter uppercase">{stats.playerName}</h2>
-            <div className="flex items-center gap-2">
-              <span className="text-[10px] font-black text-cyan-400 uppercase tracking-widest">{stats.job}</span>
-              <span className="w-1 h-1 bg-gray-700 rounded-full"></span>
-              <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest italic">{stats.title}</span>
-            </div>
-          </div>
-          <div className="text-right">
-             <div className="text-[9px] font-bold text-gray-600 uppercase tracking-widest mb-1">Nível Atual</div>
-             <div className="system-font text-5xl font-black text-white glow-text italic leading-none">{stats.level}</div>
-          </div>
-        </div>
-
-        {/* Level Progress Bar */}
-        <div className="space-y-1 mt-6">
-          <div className="flex justify-between text-[8px] font-black text-gray-500 uppercase italic tracking-widest">
-            <span>Progressão para Nível {stats.level + 1}</span>
-            <span>{Math.floor((stats.exp / stats.maxExp) * 100)}%</span>
-          </div>
-          <div className="h-1 bg-white/5 overflow-hidden cut-corners">
-            <div className="h-full bg-cyan-400 progress-fill" style={{ width: `${(stats.exp / stats.maxExp) * 100}%` }}></div>
-          </div>
-        </div>
+    <div className="space-y-6">
+      <div className="flex gap-2">
+        <button 
+          onClick={() => setActiveTab('daily')} 
+          className={`flex-1 py-3 cut-corners border text-[10px] font-black uppercase italic ${activeTab === 'daily' ? 'border-cyan-400 text-cyan-400 bg-cyan-400/10' : 'border-white/5 opacity-50'}`}
+        >
+          DIÁRIOS
+        </button>
+        <button 
+          onClick={() => setActiveTab('intervention')} 
+          className={`flex-1 py-3 cut-corners border text-[10px] font-black uppercase italic ${activeTab === 'intervention' ? 'border-purple-500 text-purple-400 bg-purple-500/10' : 'border-white/5 opacity-50'}`}
+        >
+          ORDEM ESTRATÉGICA
+        </button>
       </div>
 
-      {/* Barras de Recurso */}
-      <div className="grid grid-cols-1 gap-4">
-        <div className="system-panel cut-corners p-5 space-y-5 bg-black/20">
-          <div className="space-y-1.5">
-            <div className="flex justify-between items-center text-[10px] font-black tracking-widest uppercase italic">
-              <span className="text-red-500">Integridade Biológica (HP)</span>
-              <span className="text-white">{stats.hp} / {stats.maxHp}</span>
-            </div>
-            <div className="h-4 bg-black/60 border border-white/5 p-0.5 cut-corners">
-              <div className="h-full bg-red-600 progress-fill shadow-[0_0_15px_#dc2626]" style={{ width: `${(stats.hp / stats.maxHp) * 100}%` }}></div>
-            </div>
+      <div className="space-y-4">
+        {filtered.length === 0 ? (
+          <div className="py-20 text-center opacity-20">
+            <ShieldAlert className="mx-auto mb-4" />
+            <p className="text-[10px] uppercase font-black italic">AGUARDANDO ATUALIZAÇÃO DO ARQUITETO...</p>
           </div>
-          
-          <div className="space-y-1.5">
-            <div className="flex justify-between items-center text-[10px] font-black tracking-widest uppercase italic">
-              <span className="text-cyan-400">Capacidade Cognitiva (MP)</span>
-              <span className="text-white">{stats.focusCapacity} / {stats.maxFocusCapacity}</span>
-            </div>
-            <div className="h-4 bg-black/60 border border-white/5 p-0.5 cut-corners">
-              <div className="h-full bg-cyan-500 progress-fill shadow-[0_0_15px_#00e5ff]" style={{ width: `${(stats.focusCapacity / stats.maxFocusCapacity) * 100}%` }}></div>
-            </div>
-          </div>
+        ) : (
+          <>
+            {filtered.map(q => (
+              <div key={q.id} className={`system-panel cut-corners p-6 border-l-4 ${q.completed ? 'opacity-30 border-green-500' : q.type === 'intervention' ? 'border-purple-500' : 'border-cyan-400'}`}>
+                <div className="flex justify-between items-start mb-3">
+                  <h3 className="system-font text-xs font-black uppercase italic glow-text">{q.title}</h3>
+                  <div className="text-[9px] font-black text-cyan-500 flex items-center gap-1 bg-black/40 px-2 py-1 cut-corners">
+                    <Clock size={10} /> <QuestTimer deadline={q.deadline} />
+                  </div>
+                </div>
+                <p className="text-[10px] text-gray-500 uppercase italic leading-tight mb-4">{q.description}</p>
+                
+                <div className="space-y-1.5 mb-4">
+                  <div className="flex justify-between text-[8px] font-black text-gray-600 uppercase italic">
+                    <span>PROGRESSO</span>
+                    <span>{q.progress} / {q.target}</span>
+                  </div>
+                  <div className="h-1 bg-white/5 cut-corners overflow-hidden">
+                    <div className={`h-full transition-all duration-500 ${q.type === 'intervention' ? 'bg-purple-500' : 'bg-cyan-400'}`} style={{ width: `${(q.progress / q.target) * 100}%` }} />
+                  </div>
+                </div>
 
-          <div className="space-y-1.5">
-            <div className="flex justify-between items-center text-[10px] font-black tracking-widest uppercase italic">
-              <span className="text-gray-500">Acúmulo de Fadiga</span>
-              <span className={stats.fatigue > 70 ? 'text-red-500 animate-pulse' : 'text-white'}>{stats.fatigue}%</span>
-            </div>
-            <div className="h-2 bg-black/60 border border-white/5 p-0.5 cut-corners">
-              <div className={`h-full progress-fill ${stats.fatigue > 70 ? 'bg-red-500' : 'bg-cyan-400'}`} style={{ width: `${stats.fatigue}%` }}></div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Atributos */}
-      <div className="system-panel cut-corners p-6 bg-cyan-950/5 border border-white/5">
-        <div className="flex items-center gap-2 mb-6 border-b border-white/5 pb-2">
-          <Target size={14} className="text-cyan-400" />
-          <span className="text-[10px] font-black text-gray-400 tracking-[0.3em] uppercase italic">Parâmetros de Performance</span>
-        </div>
-        
-        <div className="grid grid-cols-1 gap-1">
-          {attributes.map((attr) => (
-            <div key={attr.key} className="flex items-center justify-between py-3 border-b border-white/5 last:border-0 hover:bg-cyan-400/5 transition-all group px-2 rounded-lg">
-              <div className="flex items-center gap-4">
-                <attr.icon size={18} className="text-cyan-400/40 group-hover:text-cyan-400 transition-colors" />
-                <span className="text-[11px] font-black text-gray-500 group-hover:text-white transition-colors tracking-widest uppercase">{attr.label}</span>
+                <div className="flex justify-between items-center border-t border-white/5 pt-3">
+                  <div className="flex gap-4 text-[9px] font-black italic opacity-60">
+                    <div className="text-yellow-500">{q.goldReward}G</div>
+                    <div className="text-cyan-400">+{q.expReward} EXP</div>
+                  </div>
+                  {!q.completed && (
+                    q.progress >= q.target ? 
+                    <button onClick={() => onComplete(q.id)} className="bg-cyan-400 text-black px-4 py-2 text-[9px] font-black uppercase italic animate-pulse">COMPLETAR</button> :
+                    <button onClick={() => onProgress(q.id)} className="border border-cyan-400 text-cyan-400 p-2 rounded-full active:scale-90"><Plus size={14} /></button>
+                  )}
+                </div>
               </div>
-              <div className="flex items-center gap-5">
-                <span className="system-font text-2xl font-black text-white italic group-hover:glow-text">{(stats as any)[attr.key]}</span>
-                {stats.unallocatedPoints > 0 && (
-                  <button 
-                    onClick={() => onAllocate(attr.key)}
-                    className="w-8 h-8 flex items-center justify-center bg-cyan-400 text-black cut-corners hover:bg-white active:scale-90 transition-all shadow-[0_0_15px_rgba(0,229,255,0.4)]"
-                  >
-                    <Plus size={16} strokeWidth={4} />
-                  </button>
-                )}
-              </div>
+            ))}
+            
+            <div className="mt-8">
+              <ImmersiveAd section="quests" />
             </div>
-          ))}
-        </div>
-
-        {stats.unallocatedPoints > 0 && (
-          <div className="mt-8 p-4 bg-cyan-400/5 border border-cyan-400/30 text-center cut-corners animate-pulse">
-            <span className="text-[11px] font-black text-cyan-400 tracking-[0.4em] uppercase">
-              {stats.unallocatedPoints} Pontos Disponíveis para Otimização
-            </span>
-          </div>
+          </>
         )}
       </div>
-
-      <div className="flex items-center gap-4 p-5 system-panel cut-corners bg-black/40 border-white/5">
-        <Info size={18} className="text-cyan-400 shrink-0" />
-        <p className="text-[10px] font-bold text-gray-600 uppercase italic leading-snug">
-          O sistema recompensa apenas a execução perfeita. A estagnação em qualquer atributo resultará em protocolos de correção forçada.
-        </p>
-      </div>
     </div>
-    
-{filtered.length > 0 && (
-  <div className="mt-8">
-    <ImmersiveAd section="quests" />
-  </div>
-)}
-
   );
 };
 
-export default StatusWindow;
+export default QuestWindow;
