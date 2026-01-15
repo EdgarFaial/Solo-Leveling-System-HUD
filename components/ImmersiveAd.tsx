@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Zap, Target, Shield } from 'lucide-react';
+import { Zap, Target, Shield, Brain, Dumbbell } from 'lucide-react';
 
 interface ImmersiveAdProps {
   section: string;
@@ -33,23 +33,12 @@ const ImmersiveAd: React.FC<ImmersiveAdProps> = ({ section }) => {
     };
   }, []);
   
-  // ... resto do código do mockAd ...
-  
-  return (
-    <div 
-      ref={adRef}
-      className={`ad-container cut-corners my-6 ${isVisible ? 'visible' : ''}`}
-    >
-      {/* Conteúdo do anúncio */}
-    </div>
-  );
-};
   // Anúncios mockados para desenvolvimento
   const mockAds = [
     {
       title: "OTIMIZADOR DE FOCO S-RANK",
       description: "App de bloqueio de distrações. Aumente +30% produtividade.",
-      icon: Zap,
+      icon: Brain,
       color: "text-cyan-400"
     },
     {
@@ -63,22 +52,37 @@ const ImmersiveAd: React.FC<ImmersiveAdProps> = ({ section }) => {
       description: "Nootrópico para +2 INT. Aprovado pelo Protocolo Arquiteto.",
       icon: Shield,
       color: "text-purple-400"
+    },
+    {
+      title: "TREINO ESPARTANO",
+      description: "Programa de 30 dias para +5 FOR. Protocolo militar adaptado.",
+      icon: Dumbbell,
+      color: "text-red-400"
+    },
+    {
+      title: "APP DE MEDITAÇÃO",
+      description: "Técnicas de respiração para +3 VONTADE. Controle mental total.",
+      icon: Zap,
+      color: "text-yellow-400"
     }
   ];
   
   const randomAd = mockAds[Math.floor(Math.random() * mockAds.length)];
   const Icon = randomAd.icon;
   
-  if (!showAd) {
+  if (!isVisible) {
     return (
-      <div className="ad-container cut-corners my-6 animate-pulse">
+      <div ref={adRef} className="ad-container cut-corners my-6 animate-pulse">
         <div className="h-24 bg-white/5 rounded"></div>
       </div>
     );
   }
   
   return (
-    <div className="ad-container cut-corners my-6 animate-in fade-in duration-500">
+    <div 
+      ref={adRef}
+      className={`ad-container cut-corners my-6 ${isVisible ? 'visible' : ''}`}
+    >
       <div className="pt-4">
         <div className="flex items-start gap-3">
           <div className={`p-2 bg-white/5 rounded ${randomAd.color}`}>
