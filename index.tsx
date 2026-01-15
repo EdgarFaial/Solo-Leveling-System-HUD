@@ -1,7 +1,19 @@
-
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
+
+// Remove tela de loading antes de renderizar
+const loading = document.getElementById('loading');
+if (loading) {
+  setTimeout(() => {
+    loading.style.opacity = '0';
+    setTimeout(() => {
+      if (loading.parentNode) {
+        loading.parentNode.removeChild(loading);
+      }
+    }, 300);
+  }, 500);
+}
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {

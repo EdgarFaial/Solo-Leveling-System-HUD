@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { 
   Shield, ScrollText, Brain, ShieldCheck, MessageSquare, Coins, Plus
@@ -27,9 +26,10 @@ const App: React.FC = () => {
   const [skills, setSkills] = useState<Skill[]>([]);
   const [skillToTest, setSkillToTest] = useState<Skill | null>(null);
   const [showProfile, setShowProfile] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   
   const initializingRef = useRef(false);
-  const processingLock = useRef(false); // Bloqueio para evitar chamadas de API concorrentes
+  const processingLock = useRef(false);
   const storageKey = 'sl_system_v29';
 
   const [availableItems, setAvailableItems] = useState<AvailableItem[]>([
@@ -39,86 +39,145 @@ const App: React.FC = () => {
 
   const [quests, setQuests] = useState<Quest[]>([]);
 
+  // Captura de erros globais
+  useEffect(() => {
+    const handleError = (event: ErrorEvent) => {
+      console.error('Global error:', event.error);
+      setError(event.error.message || 'Erro desconhecido no sistema');
+    };
 
-// ADICIONE estas funções dentro do componente App, após os outros estados:
+    const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
+      console.error('Unhandled promise rejection:', event.reason);
+      setError('Erro interno do sistema: ' + (event.reason?.message || 'Unknown'));
+    };
 
-const handleAddCustomQuest = (questData: CustomQuestData) => {
-  const deadline = new Date();
-  deadline.setDate(deadline.getDate() + questData.deadlineDays);
-  
-  const newQuest: Quest = {
-    id: `custom-quest-${Date.now()}`,
-    title: questData.title,
-    description: questData.description,
-    protocol: "CUSTOM",
-    progress: 0,
-    target: questData.target,
-    type: 'daily',
-    category: questData.category as any,
-    completed: false,
-    deadline: deadline.toISOString(),
-    reward: questData.reward,
-    goldReward: 50,
-    expReward: 25,
-    measurableAction: "Personalizado",
-    timeCommitment: "Flexível",
-    biologicalBenefit: "Auto-desenvolvimento",
-    adaptationLogic: "Customizado",
-    estimatedTime: "Variável",
-    patternCorrection: "Personalizado",
-    competenceDeveloped: "Auto-gestão",
-    isUserCreated: true
+    window.addEventListener('error', handleError);
+    window.addEventListener('unhandledrejection', handleUnhandledRejection);
+    
+    return () => {
+      window.removeEventListener('error', handleError);
+      window.removeEventListener('unhandledrejection', handleUnhandledRejection);
+    };
+  }, []);
+
+  // Tela de erro
+  if (error) {
+    return (
+      <div className="h-[100dvh] w-full bg-[#010a12] flex items-center justify-center p-6">
+        <div className="w-full max-w-sm system-panel border-red-500 cut-corners p-8 bg-red-950/20 space-y-6">
+          <h1 className="text-2xl font-black system-font text-center text-red-500 glow-text italic">ERRO DO SISTEMA</h1>
+          <p className="text-sm text-gray-300 font-mono text-center">{error}</p>
+          <div className="space-y-3">
+            <button 
+              onClick={() => window.location.reload()}
+              className="w-full bg-red-500 text-white font-black py-4 uppercase italic tracking-widest hover:bg-red-600 transition-colors"
+            >
+              REINICIAR SISTEMA
+            </button>
+            <button 
+              onClick={() => setError(null)}
+              className="w-full bg-gray-800 text-gray-400 font-black py-4 uppercase italic tracking-widest hover:bg-gray-700 transition-colors"
+            >
+              TENTAR CONTINUAR
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const handleAddCustomQuest = (questData: CustomQuestData) => {
+    const deadline = new Date();
+    deadline.setDate(deadline.getDate() + questData.deadlineDays);
+    
+    const newQuest: Quest = {
+      id: `custom-quest-${Date.now()}`,
+      title: questData.title,
+      description: questData.description,
+      protocol: "CUSTOM",
+      progress: 0,
+      target: questData.target,
+      type: 'daily',
+      category: questData.category as any,
+      completed: false,
+      deadline: deadline.toISOString(),
+      reward: questData.reward,
+      goldReward: 50,
+      expReward: 25,
+      measurableAction: "Personalizado",
+      timeCommitment: "Flexível",
+      biologicalBenefit: "Auto-desenvolvimento",
+      adaptationLogic: "Customizado",
+      estimatedTime: "Variável",
+      patternCorrection: "Personalizado",
+      competenceDeveloped: "Auto-gestão",
+      isUserCreated: true
+    };
+    
+    setQuests(prev => [...prev, newQuest]);
   };
-  
-  setQuests(prev => [...prev, newQuest]);
-};
 
-const handleAddCustomSkill = (skillData: CustomSkillData) => {
-  const newSkill: Skill = {
-    id: `custom-skill-${Date.now()}`,
-    name: skillData.name,
-    level: 1,
-    type: skillData.type,
-    description: skillData.description,
-    requirement: "Nível 1+",
-    efficiencyBonus: "+5% em tarefas relacionadas",
-    isUnlocked: false,
-    testTask: skillData.testTask,
-    testTarget: skillData.testTarget,
-    testUnit: skillData.testUnit,
-    isDynamic: true
+  const handleAddCustomSkill = (skillData: CustomSkillData) => {
+    const newSkill: Skill = {
+      id: `custom-skill-${Date.now()}`,
+      name: skillData.name,
+      level: 1,
+      type: skillData.type,
+      description: skillData.description,
+      requirement: "Nível 1+",
+      efficiencyBonus: "+5% em tarefas relacionadas",
+      isUnlocked: false,
+      testTask: skillData.testTask,
+      testTarget: skillData.testTarget,
+      testUnit: skillData.testUnit,
+      isDynamic: true
+    };
+    
+    setSkills(prev => [...prev, newSkill]);
   };
-  
-  setSkills(prev => [...prev, newSkill]);
-};
 
-const handleDeleteQuest = (id: string) => {
-  setQuests(prev => prev.filter(q => q.id !== id));
-};
+  const handleDeleteQuest = (id: string) => {
+    setQuests(prev => prev.filter(q => q.id !== id));
+  };
 
-const handleDeleteSkill = (id: string) => {
-  setSkills(prev => prev.filter(s => s.id !== id));
-};
-
+  const handleDeleteSkill = (id: string) => {
+    setSkills(prev => prev.filter(s => s.id !== id));
+  };
 
   // 1. Carregamento de Estado Inicial
   useEffect(() => {
-    const data = localStorage.getItem(storageKey);
-    if (data) {
-      const parsed = JSON.parse(data);
-      setStats(parsed.stats);
-      setQuests(parsed.quests || []);
-      setInventory(parsed.inventory || []);
-      setAvailableItems(parsed.availableItems || availableItems);
-      setSkills(parsed.skills || []);
-      if (parsed.stats.playerName) setIsAwakened(true);
+    try {
+      const data = localStorage.getItem(storageKey);
+      if (data) {
+        const parsed = JSON.parse(data);
+        setStats(parsed.stats);
+        setQuests(parsed.quests || []);
+        setInventory(parsed.inventory || []);
+        setAvailableItems(parsed.availableItems || availableItems);
+        setSkills(parsed.skills || []);
+        if (parsed.stats.playerName) setIsAwakened(true);
+      }
+    } catch (e) {
+      console.error("Erro ao carregar dados:", e);
+      // Limpa localStorage corrompido
+      localStorage.removeItem(storageKey);
     }
   }, []);
 
-  // 2. Persistência de Estado (Somente mudanças de UI)
+  // 2. Persistência de Estado
   useEffect(() => {
     if (isAwakened) {
-      localStorage.setItem(storageKey, JSON.stringify({ stats, quests, inventory, availableItems, skills }));
+      try {
+        localStorage.setItem(storageKey, JSON.stringify({ 
+          stats, 
+          quests, 
+          inventory, 
+          availableItems, 
+          skills 
+        }));
+      } catch (e) {
+        console.error("Erro ao salvar dados:", e);
+      }
     }
   }, [stats, quests, inventory, availableItems, skills, isAwakened]);
 
@@ -195,7 +254,7 @@ const handleDeleteSkill = (id: string) => {
       setQuests(prev => [...prev.filter(q => q.type !== 'daily'), ...questObjs]);
       setStats(prev => ({ ...prev, lastDailyUpdate: todayLabel }));
     } catch(e) { 
-      console.error(e); 
+      console.error("Erro ao atualizar missões diárias:", e); 
     } finally { 
       setIsProcessing(false); 
       processingLock.current = false;
@@ -217,128 +276,118 @@ const handleDeleteSkill = (id: string) => {
       
       setQuests(prev => [...prev.filter(q => q.type !== 'intervention'), ...questObjs]);
     } catch(e) { 
-      console.error(e); 
+      console.error("Erro ao gerar lote inicial:", e); 
     } finally { 
       setIsProcessing(false); 
       processingLock.current = false;
     }
   };
 
-  const handleAwakening = (name: string, age: number, goal: string) => {
-    if(!name || !age || !goal) return;
-    const finalStats: Stats = { ...INITIAL_STATS, playerName: name.toUpperCase(), age, customGoal: goal, systemMode: 'architect' };
-    setStats(finalStats);
-    triggerInitialBatch(finalStats);
-    setIsAwakened(true);
-  };
+  if (!isAwakened) {
+    const [selectedMode, setSelectedMode] = useState<'architect' | 'custom'>('architect');
+    const [step, setStep] = useState<'mode' | 'info'>('mode');
 
-// SUBSTITUA TODO O BLOCO if (!isAwakened) { ... } por:
-
-if (!isAwakened) {
-  const [selectedMode, setSelectedMode] = useState<'architect' | 'custom'>('architect');
-  const [step, setStep] = useState<'mode' | 'info'>('mode');
-
-  const handleModeSelect = (mode: 'architect' | 'custom') => {
-    setSelectedMode(mode);
-    setStep('info');
-  };
-
-  const handleAwakening = (name: string, age: number, goal: string) => {
-    if(!name || !age || !goal) return;
-    const finalStats: Stats = { 
-      ...INITIAL_STATS, 
-      playerName: name.toUpperCase(), 
-      age, 
-      customGoal: goal, 
-      systemMode: selectedMode  // ADICIONE ESTA LINHA
+    const handleModeSelect = (mode: 'architect' | 'custom') => {
+      setSelectedMode(mode);
+      setStep('info');
     };
-    setStats(finalStats);
-    if (selectedMode === 'architect') {
-      triggerInitialBatch(finalStats);
-    }
-    setIsAwakened(true);
-  };
 
-  return (
-    <div className="h-[100dvh] w-full bg-[#010a12] flex items-center justify-center p-6 text-cyan-400 overflow-hidden">
-      <div className="w-full max-w-sm system-panel border-cyan-400 cut-corners p-8 bg-cyan-950/20 space-y-6">
-        {step === 'mode' ? (
-          <>
-            <h1 className="text-4xl font-black system-font text-center glow-text italic tracking-wider">ERGA-SE</h1>
-            <p className="text-[11px] text-gray-400 text-center uppercase italic font-bold">
-              Selecione o modo de operação do Sistema:
-            </p>
-            
-            <div className="space-y-4">
-              <button 
-                onClick={() => handleModeSelect('architect')}
-                className={`w-full p-5 cut-corners border-2 text-left transition-all ${selectedMode === 'architect' ? 'border-cyan-400 bg-cyan-400/10' : 'border-gray-700 hover:border-cyan-400/50'}`}
-              >
-                <div className="flex items-center gap-3 mb-2">
-                  <div className={`w-3 h-3 rounded-full ${selectedMode === 'architect' ? 'bg-cyan-400' : 'bg-gray-700'}`}></div>
-                  <h3 className="system-font text-cyan-400 text-sm font-black uppercase">MODO ARQUITETO</h3>
-                </div>
-                <p className="text-[10px] text-gray-400 uppercase italic">
-                  IA Gemini personaliza missões baseadas em seus dados. Evolução guiada pelo Arquiteto.
-                </p>
-              </button>
+    const handleAwakening = (name: string, age: number, goal: string) => {
+      if(!name || !age || !goal) return;
+      const finalStats: Stats = { 
+        ...INITIAL_STATS, 
+        playerName: name.toUpperCase(), 
+        age, 
+        customGoal: goal, 
+        systemMode: selectedMode
+      };
+      setStats(finalStats);
+      if (selectedMode === 'architect') {
+        triggerInitialBatch(finalStats);
+      }
+      setIsAwakened(true);
+    };
+
+    return (
+      <div className="h-[100dvh] w-full bg-[#010a12] flex items-center justify-center p-6 text-cyan-400 overflow-hidden">
+        <div className="w-full max-w-sm system-panel border-cyan-400 cut-corners p-8 bg-cyan-950/20 space-y-6">
+          {step === 'mode' ? (
+            <>
+              <h1 className="text-4xl font-black system-font text-center glow-text italic tracking-wider">ERGA-SE</h1>
+              <p className="text-[11px] text-gray-400 text-center uppercase italic font-bold">
+                Selecione o modo de operação do Sistema:
+              </p>
+              
+              <div className="space-y-4">
+                <button 
+                  onClick={() => handleModeSelect('architect')}
+                  className={`w-full p-5 cut-corners border-2 text-left transition-all ${selectedMode === 'architect' ? 'border-cyan-400 bg-cyan-400/10' : 'border-gray-700 hover:border-cyan-400/50'}`}
+                >
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className={`w-3 h-3 rounded-full ${selectedMode === 'architect' ? 'bg-cyan-400' : 'bg-gray-700'}`}></div>
+                    <h3 className="system-font text-cyan-400 text-sm font-black uppercase">MODO ARQUITETO</h3>
+                  </div>
+                  <p className="text-[10px] text-gray-400 uppercase italic">
+                    IA Gemini personaliza missões baseadas em seus dados. Evolução guiada pelo Arquiteto.
+                  </p>
+                </button>
+                
+                <button 
+                  onClick={() => handleModeSelect('custom')}
+                  className={`w-full p-5 cut-corners border-2 text-left transition-all ${selectedMode === 'custom' ? 'border-yellow-500 bg-yellow-500/10' : 'border-gray-700 hover:border-yellow-500/50'}`}
+                >
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className={`w-3 h-3 rounded-full ${selectedMode === 'custom' ? 'bg-yellow-500' : 'bg-gray-700'}`}></div>
+                    <h3 className="system-font text-yellow-500 text-sm font-black uppercase">MODO LIVRE</h3>
+                  </div>
+                  <p className="text-[10px] text-gray-400 uppercase italic">
+                    Crie suas próprias missões e habilidades. Controle total sobre sua evolução.
+                  </p>
+                </button>
+              </div>
               
               <button 
-                onClick={() => handleModeSelect('custom')}
-                className={`w-full p-5 cut-corners border-2 text-left transition-all ${selectedMode === 'custom' ? 'border-yellow-500 bg-yellow-500/10' : 'border-gray-700 hover:border-yellow-500/50'}`}
+                onClick={() => setStep('info')}
+                className="w-full bg-cyan-400 text-black font-black py-4 uppercase italic tracking-widest active:scale-95 transition-all mt-4"
               >
-                <div className="flex items-center gap-3 mb-2">
-                  <div className={`w-3 h-3 rounded-full ${selectedMode === 'custom' ? 'bg-yellow-500' : 'bg-gray-700'}`}></div>
-                  <h3 className="system-font text-yellow-500 text-sm font-black uppercase">MODO LIVRE</h3>
-                </div>
-                <p className="text-[10px] text-gray-400 uppercase italic">
-                  Crie suas próprias missões e habilidades. Controle total sobre sua evolução.
-                </p>
+                CONTINUAR
               </button>
-            </div>
-            
-            <button 
-              onClick={() => setStep('info')}
-              className="w-full bg-cyan-400 text-black font-black py-4 uppercase italic tracking-widest active:scale-95 transition-all mt-4"
-            >
-              CONTINUAR
-            </button>
-          </>
-        ) : (
-          <>
-            <h1 className="text-4xl font-black system-font text-center glow-text italic tracking-wider">
-              {selectedMode === 'architect' ? 'VINCULAR AO ARQUITETO' : 'MODO LIVRE ATIVADO'}
-            </h1>
-            <div className="space-y-4">
-              <input id="n" placeholder="NOME..." className="w-full bg-black/40 border-b border-cyan-400/40 p-3 text-white uppercase outline-none focus:border-cyan-400" />
-              <input id="a" type="number" placeholder="IDADE..." className="w-full bg-black/40 border-b border-cyan-400/40 p-3 text-white outline-none focus:border-cyan-400" />
-              <textarea id="g" placeholder="OBJETIVO PRINCIPAL..." className="w-full bg-black/40 border border-cyan-400/40 p-3 text-white text-[11px] h-24 outline-none resize-none focus:border-cyan-400" />
-            </div>
-            
-            <div className="flex gap-3">
-              <button 
-                onClick={() => setStep('mode')}
-                className="flex-1 bg-gray-800 text-gray-400 font-black py-4 uppercase italic tracking-widest active:scale-95 transition-all"
-              >
-                VOLTAR
-              </button>
-              <button 
-                onClick={() => handleAwakening(
-                  (document.getElementById('n') as any).value, 
-                  parseInt((document.getElementById('a') as any).value), 
-                  (document.getElementById('g') as any).value
-                )} 
-                className="flex-1 bg-cyan-400 text-black font-black py-4 uppercase italic tracking-widest active:scale-95 transition-all"
-              >
-                {selectedMode === 'architect' ? 'ATIVAR SISTEMA' : 'INICIAR MODO LIVRE'}
-              </button>
-            </div>
-          </>
-        )}
+            </>
+          ) : (
+            <>
+              <h1 className="text-4xl font-black system-font text-center glow-text italic tracking-wider">
+                {selectedMode === 'architect' ? 'VINCULAR AO ARQUITETO' : 'MODO LIVRE ATIVADO'}
+              </h1>
+              <div className="space-y-4">
+                <input id="n" placeholder="NOME..." className="w-full bg-black/40 border-b border-cyan-400/40 p-3 text-white uppercase outline-none focus:border-cyan-400" />
+                <input id="a" type="number" placeholder="IDADE..." className="w-full bg-black/40 border-b border-cyan-400/40 p-3 text-white outline-none focus:border-cyan-400" />
+                <textarea id="g" placeholder="OBJETIVO PRINCIPAL..." className="w-full bg-black/40 border border-cyan-400/40 p-3 text-white text-[11px] h-24 outline-none resize-none focus:border-cyan-400" />
+              </div>
+              
+              <div className="flex gap-3">
+                <button 
+                  onClick={() => setStep('mode')}
+                  className="flex-1 bg-gray-800 text-gray-400 font-black py-4 uppercase italic tracking-widest active:scale-95 transition-all"
+                >
+                  VOLTAR
+                </button>
+                <button 
+                  onClick={() => handleAwakening(
+                    (document.getElementById('n') as any).value, 
+                    parseInt((document.getElementById('a') as any).value), 
+                    (document.getElementById('g') as any).value
+                  )} 
+                  className="flex-1 bg-cyan-400 text-black font-black py-4 uppercase italic tracking-widest active:scale-95 transition-all"
+                >
+                  {selectedMode === 'architect' ? 'ATIVAR SISTEMA' : 'INICIAR MODO LIVRE'}
+                </button>
+              </div>
+            </>
+          )}
+        </div>
       </div>
-    </div>
-  );
-}
+    );
+  }
 
   return (
     <div className="h-[100dvh] w-screen bg-[#02060a] text-white flex flex-col font-['Rajdhani'] overflow-hidden relative">
@@ -349,7 +398,7 @@ if (!isAwakened) {
         </div>
       )}
 
-      {/* Cabeçalho Fixo - Ajustado para Safe Area e visibilidade mobile */}
+      {/* Cabeçalho Fixo */}
       <header className="shrink-0 z-[100] system-panel border-b border-cyan-400/20 px-6 py-4 flex items-center justify-between backdrop-blur-3xl pt-[calc(env(safe-area-inset-top)+0.5rem)]">
         <div className="flex items-center gap-3 cursor-pointer group" onClick={() => setShowProfile(true)}>
           <div className="w-9 h-9 border border-cyan-400/40 flex items-center justify-center bg-cyan-400/5 cut-corners group-active:scale-90 transition-transform">
@@ -365,7 +414,7 @@ if (!isAwakened) {
         </div>
       </header>
 
-      {/* Área de Scroll - Centralizada */}
+      {/* Área de Scroll */}
       <main className="flex-1 overflow-y-auto px-4 py-4 no-scrollbar relative z-10" style={{ WebkitOverflowScrolling: 'touch' }}>
         <div className="max-w-xl mx-auto space-y-6 pb-24">
           {activeTab === 'STATUS' && <StatusWindow stats={stats} onAllocate={(k) => setTrainingStat(k as any)} />}
@@ -400,7 +449,7 @@ if (!isAwakened) {
         </div>
       </main>
 
-      {/* Menu Inferior Fixo - Garantindo que nunca suma em mobile */}
+      {/* Menu Inferior Fixo */}
       <nav className="shrink-0 z-[100] system-panel border-t border-cyan-400/20 flex items-center justify-around backdrop-blur-3xl pb-[calc(env(safe-area-inset-bottom)+0.75rem)] px-1">
         {[ 
           { id: 'STATUS', icon: Shield, label: 'STATUS' }, 
