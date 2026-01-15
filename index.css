@@ -1,4 +1,3 @@
-
 * {
   box-sizing: border-box;
   -webkit-tap-highlight-color: transparent;
@@ -10,7 +9,7 @@ body, html {
   width: 100%;
   height: 100%;
   background: #02060a;
-  overflow: hidden; /* Mantém o HUD fixo, permitindo scroll apenas no main */
+  overflow: hidden;
 }
 
 /* Scroll imersivo funcional no desktop */
@@ -38,8 +37,6 @@ body, html {
   }
 }
 
-/* ADICIONE ESTES ESTILOS no final do arquivo index.css: */
-
 /* Remove overscroll glow em mobile */
 body {
   overscroll-behavior-y: contain;
@@ -60,21 +57,6 @@ body {
   border-color: #f59e0b !important;
   background: linear-gradient(45deg, rgba(245, 158, 11, 0.05), transparent) !important;
 }
-/* ADICIONE no final do arquivo: */
-
-/* Anúncios aparecem ao rolar */
-.ad-container {
-  opacity: 0;
-  transform: translateY(20px);
-  transition: opacity 0.5s ease, transform 0.5s ease;
-}
-
-.ad-container.visible {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-/* ADICIONE no final do arquivo index.css */
 
 /* Anúncios imersivos */
 .ad-container {
@@ -109,17 +91,21 @@ body {
   text-transform: uppercase;
 }
 
-/* Remove overscroll glow em mobile */
-body {
-  overscroll-behavior-y: contain;
+/* Progress bar animation */
+.progress-fill {
+  transition: width 0.5s ease-in-out;
 }
 
-/* Animações de entrada */
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+/* Utilitários extras */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
 }
 
-.animate-in {
-  animation: fadeIn 0.3s ease-out;
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
