@@ -58,6 +58,7 @@ const CustomModePanel: React.FC<CustomModePanelProps> = ({
         deadlineDays: 1
       });
       setShowQuestForm(false);
+      setEditingQuest(null);
     }
   };
 
@@ -73,6 +74,7 @@ const CustomModePanel: React.FC<CustomModePanelProps> = ({
         testUnit: 'repetições'
       });
       setShowSkillForm(false);
+      setEditingSkill(null);
     }
   };
 
@@ -113,7 +115,18 @@ const CustomModePanel: React.FC<CustomModePanelProps> = ({
             <Award size={16} /> MISSÕES PERSONALIZADAS ({quests.filter(q => q.isUserCreated).length})
           </h3>
           <button
-            onClick={() => setShowQuestForm(true)}
+            onClick={() => {
+              setShowQuestForm(true);
+              setEditingQuest(null);
+              setQuestForm({
+                title: '',
+                description: '',
+                category: 'COGNITIVO',
+                target: 1,
+                reward: 'Auto-satisfação',
+                deadlineDays: 1
+              });
+            }}
             className="bg-cyan-400 text-black px-4 py-2 text-[10px] font-black uppercase italic cut-corners hover:bg-white transition-all flex items-center gap-2 active:scale-95"
           >
             <Plus size={14} /> NOVA MISSÃO
@@ -123,8 +136,13 @@ const CustomModePanel: React.FC<CustomModePanelProps> = ({
         {showQuestForm && (
           <div className="system-panel cut-corners p-6 border-cyan-400/30 mb-6 animate-in fade-in">
             <div className="flex justify-between items-center mb-4">
-              <h4 className="text-[12px] font-black text-white uppercase">CRIAR MISSÃO PERSONALIZADA</h4>
-              <button onClick={() => setShowQuestForm(false)} className="text-gray-600 hover:text-white">
+              <h4 className="text-[12px] font-black text-white uppercase">
+                {editingQuest ? 'EDITAR MISSÃO' : 'CRIAR MISSÃO PERSONALIZADA'}
+              </h4>
+              <button onClick={() => {
+                setShowQuestForm(false);
+                setEditingQuest(null);
+              }} className="text-gray-600 hover:text-white">
                 <X size={18} />
               </button>
             </div>
@@ -197,7 +215,7 @@ const CustomModePanel: React.FC<CustomModePanelProps> = ({
                 onClick={handleAddQuest}
                 className="w-full bg-green-500 text-black font-black py-3 text-[11px] uppercase italic cut-corners hover:bg-green-400 transition-all active:scale-95 flex items-center justify-center gap-2"
               >
-                <Save size={14} /> SALVAR MISSÃO
+                <Save size={14} /> {editingQuest ? 'ATUALIZAR MISSÃO' : 'SALVAR MISSÃO'}
               </button>
             </div>
           </div>
@@ -232,9 +250,10 @@ const CustomModePanel: React.FC<CustomModePanelProps> = ({
                           category: quest.category,
                           target: quest.target,
                           reward: quest.reward,
-                          deadlineDays: Math.ceil((new Date(quest.deadline).getTime() - Date.now()) / (1000 * 3600 * 24))
+                          deadlineDays: Math.max(1, Math.ceil((new Date(quest.deadline).getTime() - Date.now()) / (1000 * 3600 * 24)))
                         });
                         setEditingQuest(quest.id);
+                        setShowQuestForm(true);
                       }}
                       className="text-cyan-400 hover:text-white p-1"
                     >
@@ -271,7 +290,18 @@ const CustomModePanel: React.FC<CustomModePanelProps> = ({
             <Brain size={16} /> HABILIDADES PERSONALIZADAS ({skills.filter(s => s.isDynamic && s.id.includes('custom')).length})
           </h3>
           <button
-            onClick={() => setShowSkillForm(true)}
+            onClick={() => {
+              setShowSkillForm(true);
+              setEditingSkill(null);
+              setSkillForm({
+                name: '',
+                description: '',
+                type: 'COGNITIVA',
+                testTask: '',
+                testTarget: 1,
+                testUnit: 'repetições'
+              });
+            }}
             className="bg-purple-500 text-black px-4 py-2 text-[10px] font-black uppercase italic cut-corners hover:bg-purple-400 transition-all flex items-center gap-2 active:scale-95"
           >
             <Plus size={14} /> NOVA HABILIDADE
@@ -281,8 +311,13 @@ const CustomModePanel: React.FC<CustomModePanelProps> = ({
         {showSkillForm && (
           <div className="system-panel cut-corners p-6 border-purple-500/30 mb-6 animate-in fade-in">
             <div className="flex justify-between items-center mb-4">
-              <h4 className="text-[12px] font-black text-white uppercase">CRIAR HABILIDADE PERSONALIZADA</h4>
-              <button onClick={() => setShowSkillForm(false)} className="text-gray-600 hover:text-white">
+              <h4 className="text-[12px] font-black text-white uppercase">
+                {editingSkill ? 'EDITAR HABILIDADE' : 'CRIAR HABILIDADE PERSONALIZADA'}
+              </h4>
+              <button onClick={() => {
+                setShowSkillForm(false);
+                setEditingSkill(null);
+              }} className="text-gray-600 hover:text-white">
                 <X size={18} />
               </button>
             </div>
@@ -365,7 +400,7 @@ const CustomModePanel: React.FC<CustomModePanelProps> = ({
                 onClick={handleAddSkill}
                 className="w-full bg-green-500 text-black font-black py-3 text-[11px] uppercase italic cut-corners hover:bg-green-400 transition-all active:scale-95 flex items-center justify-center gap-2"
               >
-                <Save size={14} /> SALVAR HABILIDADE
+                <Save size={14} /> {editingSkill ? 'ATUALIZAR HABILIDADE' : 'SALVAR HABILIDADE'}
               </button>
             </div>
           </div>
@@ -403,6 +438,7 @@ const CustomModePanel: React.FC<CustomModePanelProps> = ({
                           testUnit: skill.testUnit
                         });
                         setEditingSkill(skill.id);
+                        setShowSkillForm(true);
                       }}
                       className="text-purple-400 hover:text-white p-1"
                     >
@@ -433,6 +469,5 @@ const CustomModePanel: React.FC<CustomModePanelProps> = ({
     </div>
   );
 };
-
 
 export default CustomModePanel;

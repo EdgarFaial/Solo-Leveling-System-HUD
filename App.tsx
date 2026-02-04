@@ -60,32 +60,6 @@ const App: React.FC = () => {
     };
   }, []);
 
-  // Tela de erro
-  if (error) {
-    return (
-      <div className="h-[100dvh] w-full bg-[#010a12] flex items-center justify-center p-6">
-        <div className="w-full max-w-sm system-panel border-red-500 cut-corners p-8 bg-red-950/20 space-y-6">
-          <h1 className="text-2xl font-black system-font text-center text-red-500 glow-text italic">ERRO DO SISTEMA</h1>
-          <p className="text-sm text-gray-300 font-mono text-center">{error}</p>
-          <div className="space-y-3">
-            <button 
-              onClick={() => window.location.reload()}
-              className="w-full bg-red-500 text-white font-black py-4 uppercase italic tracking-widest hover:bg-red-600 transition-colors"
-            >
-              REINICIAR SISTEMA
-            </button>
-            <button 
-              onClick={() => setError(null)}
-              className="w-full bg-gray-800 text-gray-400 font-black py-4 uppercase italic tracking-widest hover:bg-gray-700 transition-colors"
-            >
-              TENTAR CONTINUAR
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   const handleAddCustomQuest = (questData: CustomQuestData) => {
     const deadline = new Date();
     deadline.setDate(deadline.getDate() + questData.deadlineDays);
@@ -283,6 +257,32 @@ const App: React.FC = () => {
     }
   };
 
+  // Tela de erro
+  if (error) {
+    return (
+      <div className="h-[100dvh] w-full bg-[#010a12] flex items-center justify-center p-6">
+        <div className="w-full max-w-sm system-panel border-red-500 cut-corners p-8 bg-red-950/20 space-y-6">
+          <h1 className="text-2xl font-black system-font text-center text-red-500 glow-text italic">ERRO DO SISTEMA</h1>
+          <p className="text-sm text-gray-300 font-mono text-center">{error}</p>
+          <div className="space-y-3">
+            <button 
+              onClick={() => window.location.reload()}
+              className="w-full bg-red-500 text-white font-black py-4 uppercase italic tracking-widest hover:bg-red-600 transition-colors"
+            >
+              REINICIAR SISTEMA
+            </button>
+            <button 
+              onClick={() => setError(null)}
+              className="w-full bg-gray-800 text-gray-400 font-black py-4 uppercase italic tracking-widest hover:bg-gray-700 transition-colors"
+            >
+              TENTAR CONTINUAR
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (!isAwakened) {
     const [selectedMode, setSelectedMode] = useState<'architect' | 'custom'>('architect');
     const [step, setStep] = useState<'mode' | 'info'>('mode');
@@ -417,60 +417,83 @@ const App: React.FC = () => {
       {/* Área de Scroll */}
       <main className="flex-1 overflow-y-auto px-4 py-4 no-scrollbar relative z-10" style={{ WebkitOverflowScrolling: 'touch' }}>
         <div className="max-w-xl mx-auto space-y-6 pb-24">
-          {activeTab === 'STATUS' && <StatusWindow stats={stats} onAllocate={(k) => setTrainingStat(k as any)} />}
-          {activeTab === 'PROTOCOLS' && <QuestWindow quests={quests} onComplete={(id) => setQuests(prev => prev.map(q => q.id === id ? {...q, completed: true} : q))} onProgress={(id) => setQuests(prev => prev.map(q => q.id === id ? {...q, progress: Math.min(q.progress + 1, q.target)} : q))} />}
-          {activeTab === 'SKILLS' && (
-            <div className="space-y-4">
-              <h2 className="system-font text-cyan-400 text-sm font-black mb-4 italic flex items-center gap-2"><Brain size={16}/> HABILIDADES (ATIVAS: {skills.filter(s => !s.isUnlocked).length})</h2>
-              {skills.map(s => (
-                <div key={s.id} className={`system-panel cut-corners p-5 border-l-4 ${s.isUnlocked ? 'border-green-500 bg-green-500/5' : 'border-cyan-400 bg-cyan-950/10'} transition-all`}>
-                  <h3 className="system-font text-xs font-black uppercase text-white">{s.name}</h3>
-                  <p className="text-[10px] text-gray-500 mt-2 uppercase italic leading-tight">{s.description}</p>
-                  {!s.isUnlocked && (
-                    <button onClick={() => setSkillToTest(s)} className="w-full mt-4 bg-cyan-400 text-black font-black py-3 text-[10px] uppercase italic cut-corners active:scale-95">
-                      [ TESTAR COMPATIBILIDADE ]
-                    </button>
-                  )}
+          {/* Renderização Condicional baseada no modo */}
+          {stats.systemMode === 'custom' ? (
+            <CustomModePanel
+              quests={quests.filter(q => q.isUserCreated)}
+              skills={skills.filter(s => s.isDynamic)}
+              onAddQuest={handleAddCustomQuest}
+              onAddSkill={handleAddCustomSkill}
+              onDeleteQuest={handleDeleteQuest}
+              onDeleteSkill={handleDeleteSkill}
+              onEditQuest={(id, updated) => {
+                setQuests(prev => prev.map(q => q.id === id ? {...q, ...updated} : q));
+              }}
+              onEditSkill={(id, updated) => {
+                setSkills(prev => prev.map(s => s.id === id ? {...s, ...updated} : s));
+              }}
+            />
+          ) : (
+            <>
+              {activeTab === 'STATUS' && <StatusWindow stats={stats} onAllocate={(k) => setTrainingStat(k as any)} />}
+              {activeTab === 'PROTOCOLS' && <QuestWindow quests={quests} onComplete={(id) => setQuests(prev => prev.map(q => q.id === id ? {...q, completed: true} : q))} onProgress={(id) => setQuests(prev => prev.map(q => q.id === id ? {...q, progress: Math.min(q.progress + 1, q.target)} : q))} />}
+              {activeTab === 'SKILLS' && (
+                <div className="space-y-4">
+                  <h2 className="system-font text-cyan-400 text-sm font-black mb-4 italic flex items-center gap-2"><Brain size={16}/> HABILIDADES (ATIVAS: {skills.filter(s => !s.isUnlocked).length})</h2>
+                  {skills.map(s => (
+                    <div key={s.id} className={`system-panel cut-corners p-5 border-l-4 ${s.isUnlocked ? 'border-green-500 bg-green-500/5' : 'border-cyan-400 bg-cyan-950/10'} transition-all`}>
+                      <h3 className="system-font text-xs font-black uppercase text-white">{s.name}</h3>
+                      <p className="text-[10px] text-gray-500 mt-2 uppercase italic leading-tight">{s.description}</p>
+                      {!s.isUnlocked && (
+                        <button onClick={() => setSkillToTest(s)} className="w-full mt-4 bg-cyan-400 text-black font-black py-3 text-[10px] uppercase italic cut-corners active:scale-95">
+                          [ TESTAR COMPATIBILIDADE ]
+                        </button>
+                      )}
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
+              )}
+              {activeTab === 'CHAT' && <ArchitectChat stats={stats} />}
+              {activeTab === 'REGISTRY' && (
+                <div className="space-y-6">
+                  <button onClick={() => {
+                      const n = prompt("NOME DO ITEM:"); const d = prompt("DESCRIÇÃO:");
+                      if(n && d) setAvailableItems([...availableItems, { id: Date.now().toString(), name: n.toUpperCase(), description: d, category: 'custom', owned: true, missionBonus: 'Custom', icon: '📦' }]);
+                  }} className="w-full py-4 border border-cyan-400/40 text-cyan-400 text-[10px] font-black uppercase italic cut-corners hover:bg-cyan-400/5"><Plus size={16} className="inline mr-2" /> REGISTRAR HARDWARE</button>
+                  <ItemsRegistryWindow items={availableItems} onToggle={(id) => setAvailableItems(prev => prev.map(it => it.id === id ? {...it, owned: !it.owned} : it))} />
+                </div>
+              )}
+              {activeTab === 'INVENTORY' && <InventoryWindow items={inventory} />}
+            </>
           )}
-          {activeTab === 'CHAT' && <ArchitectChat stats={stats} />}
-          {activeTab === 'REGISTRY' && (
-            <div className="space-y-6">
-              <button onClick={() => {
-                  const n = prompt("NOME DO ITEM:"); const d = prompt("DESCRIÇÃO:");
-                  if(n && d) setAvailableItems([...availableItems, { id: Date.now().toString(), name: n.toUpperCase(), description: d, category: 'custom', owned: true, missionBonus: 'Custom', icon: '📦' }]);
-              }} className="w-full py-4 border border-cyan-400/40 text-cyan-400 text-[10px] font-black uppercase italic cut-corners hover:bg-cyan-400/5"><Plus size={16} className="inline mr-2" /> REGISTRAR HARDWARE</button>
-              <ItemsRegistryWindow items={availableItems} onToggle={(id) => setAvailableItems(prev => prev.map(it => it.id === id ? {...it, owned: !it.owned} : it))} />
-            </div>
-          )}
-          {activeTab === 'INVENTORY' && <InventoryWindow items={inventory} />}
         </div>
       </main>
 
-      {/* Menu Inferior Fixo */}
-      <nav className="shrink-0 z-[100] system-panel border-t border-cyan-400/20 flex items-center justify-around backdrop-blur-3xl pb-[calc(env(safe-area-inset-bottom)+0.75rem)] px-1">
-        {[ 
-          { id: 'STATUS', icon: Shield, label: 'STATUS' }, 
-          { id: 'PROTOCOLS', icon: ScrollText, label: 'MISSÃO' }, 
-          { id: 'SKILLS', icon: Brain, label: 'SKILLS' }, 
-          { id: 'REGISTRY', icon: ShieldCheck, label: 'ITENS' }, 
-          { id: 'CHAT', icon: MessageSquare, label: 'CHAT' } 
-        ].map((t) => (
-          <button 
-            key={t.id} 
-            onClick={() => setActiveTab(t.id as SystemTab)} 
-            className={`flex-1 flex flex-col items-center justify-center gap-1 py-3 min-w-0 transition-all ${activeTab === t.id ? 'text-cyan-400' : 'text-gray-600'}`}
-          >
-            <t.icon size={18} className={activeTab === t.id ? 'glow-text' : ''} />
-            <span className="text-[7px] font-black uppercase tracking-tighter truncate w-full text-center px-1 italic">
-              {t.label}
-            </span>
-          </button>
-        ))}
-      </nav>
+      {/* Menu Inferior Fixo (apenas para modo arquiteto) */}
+      {stats.systemMode !== 'custom' && (
+        <nav className="shrink-0 z-[100] system-panel border-t border-cyan-400/20 flex items-center justify-around backdrop-blur-3xl pb-[calc(env(safe-area-inset-bottom)+0.75rem)] px-1">
+          {[ 
+            { id: 'STATUS', icon: Shield, label: 'STATUS' }, 
+            { id: 'PROTOCOLS', icon: ScrollText, label: 'MISSÃO' }, 
+            { id: 'SKILLS', icon: Brain, label: 'SKILLS' }, 
+            { id: 'REGISTRY', icon: ShieldCheck, label: 'ITENS' }, 
+            { id: 'CHAT', icon: MessageSquare, label: 'CHAT' } 
+          ].map((t) => (
+            <button 
+              key={t.id} 
+              onClick={() => setActiveTab(t.id as SystemTab)} 
+              className={`flex-1 flex flex-col items-center justify-center gap-1 py-3 min-w-0 transition-all ${activeTab === t.id ? 'text-cyan-400' : 'text-gray-600'}`}
+            >
+              <t.icon size={18} className={activeTab === t.id ? 'glow-text' : ''} />
+              <span className="text-[7px] font-black uppercase tracking-tighter truncate w-full text-center px-1 italic">
+                {t.label}
+              </span>
+            </button>
+          ))}
+        </nav>
+      )}
 
+      {/* Modals e Diálogos */}
       {showProfile && <ProfileWindow stats={stats} onSave={(u) => setStats(s => ({...s, ...u}))} onClose={() => setShowProfile(false)} />}
       {notification && <SystemDialog message={notification.msg} type={notification.type} onClose={() => setNotification(null)} />}
       {trainingStat && <TrainingModal statKey={trainingStat} currentValue={(stats as any)[trainingStat]} onSuccess={() => { setStats(s => ({...s, [trainingStat]: (s as any)[trainingStat]+1, unallocatedPoints: s.unallocatedPoints-1})); setTrainingStat(null); }} onCancel={() => setTrainingStat(null)} />}

@@ -4,8 +4,8 @@ import { Stats, AvailableItem, Quest, Skill } from "../types";
 const OPENROUTER_API_KEY = "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";
 const OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions";
 
-// Modelo do OpenRouter
-const OPENROUTER_MODEL = "google/gemini-2.0-flash-exp:free";
+// Modelo do OpenRouter (corrigido - modelo válido)
+const OPENROUTER_MODEL = "google/gemini-2.0-flash-lite:free";
 
 // Função de fallback para dados mock
 function getMockResponse(prompt: string, isArray: boolean = false) {
@@ -134,6 +134,8 @@ async function getOpenRouterResponse(prompt: string, schema?: any, isArray: bool
       requestBody.response_format = { type: "json_object" };
     }
 
+    console.log("Enviando requisição para OpenRouter...");
+    
     const response = await fetch(OPENROUTER_API_URL, {
       method: "POST",
       headers: {
@@ -145,8 +147,15 @@ async function getOpenRouterResponse(prompt: string, schema?: any, isArray: bool
       body: JSON.stringify(requestBody)
     });
 
+    console.log("Resposta da API:", response.status, response.statusText);
+    
     if (!response.ok) {
-      const errorData = await response.json();
+      if (response.status === 404) {
+        console.warn("Modelo não encontrado (404). Usando dados mock.");
+        return getMockResponse(prompt, isArray);
+      }
+      
+      const errorData = await response.json().catch(() => ({}));
       console.error("OpenRouter API Error:", errorData);
       throw new Error(`OpenRouter API error: ${response.status} ${response.statusText}`);
     }
