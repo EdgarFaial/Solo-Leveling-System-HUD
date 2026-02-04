@@ -417,8 +417,8 @@ const App: React.FC = () => {
       {/* Área de Scroll */}
       <main className="flex-1 overflow-y-auto px-4 py-4 no-scrollbar relative z-10" style={{ WebkitOverflowScrolling: 'touch' }}>
         <div className="max-w-xl mx-auto space-y-6 pb-24">
-          {activeTab === 'STATUS' && <StatusWindow stats={stats} onAllocate={(k) => setTrainingStat(k as any)} />}
-          {activeTab === 'PROTOCOLS' && <QuestWindow quests={quests} onComplete={(id) => setQuests(prev => prev.map(q => q.id === id ? {...q, completed: true} : q))} onProgress={(id) => setQuests(prev => prev.map(q => q.id === id ? {...q, progress: Math.min(q.progress + 1, q.target)} : q))} />}
+ {activeTab === 'STATUS' && <StatusWindow stats={stats} onAllocate={(k) => setTrainingStat(k as any)} />}
+{activeTab === 'PROTOCOLS' && <QuestWindow quests={quests} onComplete={(id) => setQuests(prev => prev.map(q => q.id === id ? {...q, completed: true} : q))} onProgress={(id) => setQuests(prev => prev.map(q => q.id === id ? {...q, progress: Math.min(q.progress + 1, q.target)} : q))} />}
           {activeTab === 'SKILLS' && (
             <div className="space-y-4">
               <h2 className="system-font text-cyan-400 text-sm font-black mb-4 italic flex items-center gap-2"><Brain size={16}/> HABILIDADES (ATIVAS: {skills.filter(s => !s.isUnlocked).length})</h2>
