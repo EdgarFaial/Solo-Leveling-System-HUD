@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, Trash2, Edit2, Save, X, Target, Award, Dumbbell, Brain, Users, Chess } from 'lucide-react';
+import { Plus, Trash2, Edit2, Save, X, Target, Award, Dumbbell, Brain, Users, Trophy } from 'lucide-react';
 import { Quest, Skill, CustomQuestData, CustomSkillData, QuestCategory } from '../types';
 
 interface CustomModePanelProps {
@@ -89,7 +89,7 @@ const CustomModePanel: React.FC<CustomModePanelProps> = ({
     'COGNITIVA': Brain,
     'MOTORA': Dumbbell,
     'SOCIAL': Users,
-    'ESTRATÉGICA': Chess
+    'ESTRATÉGICA': Trophy
   };
 
   return (
@@ -433,5 +433,6 @@ const CustomModePanel: React.FC<CustomModePanelProps> = ({
     </div>
   );
 };
+
 
 export default CustomModePanel;
