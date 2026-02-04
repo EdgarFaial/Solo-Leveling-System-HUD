@@ -1,109 +1,178 @@
-import React, { useState, useEffect } from 'react';
-import { Quest } from '../types';
-import { Plus, Clock, ShieldAlert } from 'lucide-react';
-import ImmersiveAd from './ImmersiveAd';
+import React from 'react';
+import { Stats } from '../types';
+import { Zap, Dumbbell, Eye, Brain, Shield, BarChart3, Heart, Target, Battery } from 'lucide-react';
 
-const QuestTimer: React.FC<{ deadline: string }> = ({ deadline }) => {
-  const [timeLeft, setTimeLeft] = useState("");
-
-  useEffect(() => {
-    const update = () => {
-      const diff = new Date(deadline).getTime() - new Date().getTime();
-      if (diff < 0) {
-        setTimeLeft("EXPIRADO");
-        return;
-      }
-      const h = Math.floor(diff / (1000 * 3600));
-      const m = Math.floor((diff / (1000 * 60)) % 60);
-      const s = Math.floor((diff / 1000) % 60);
-      setTimeLeft(`${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`);
-    };
-    update();
-    const timer = setInterval(update, 1000);
-    return () => clearInterval(timer);
-  }, [deadline]);
-
-  return <span className="font-mono">{timeLeft}</span>;
-};
-
-interface QuestWindowProps {
-  quests: Quest[];
-  onComplete: (id: string) => void;
-  onProgress: (id: string) => void;
+interface StatusWindowProps {
+  stats: Stats;
+  onAllocate: (statKey: keyof Stats) => void;
 }
 
-const QuestWindow: React.FC<QuestWindowProps> = ({ quests, onComplete, onProgress }) => {
-  const [activeTab, setActiveTab] = useState<'daily' | 'intervention'>('daily');
-
-  const filtered = quests.filter(q => q.type === activeTab);
+const StatusWindow: React.FC<StatusWindowProps> = ({ stats, onAllocate }) => {
+  const statItems = [
+    { 
+      key: 'strength', 
+      label: 'FORÇA', 
+      icon: Dumbbell, 
+      color: 'text-red-500',
+      description: 'Potência muscular e integridade física'
+    },
+    { 
+      key: 'agility', 
+      label: 'AGILIDADE', 
+      icon: Zap, 
+      color: 'text-yellow-400',
+      description: 'Coordenação motora e tempo de reação'
+    },
+    { 
+      key: 'vitality', 
+      label: 'VITALIDADE', 
+      icon: Shield, 
+      color: 'text-blue-500',
+      description: 'Capacidade de recuperação e resiliência'
+    },
+    { 
+      key: 'sense', 
+      label: 'SENTIDOS', 
+      icon: Eye, 
+      color: 'text-green-400',
+      description: 'Consciência situacional e redução de ruído'
+    },
+    { 
+      key: 'intelligence', 
+      label: 'INTELIGÊNCIA', 
+      icon: Brain, 
+      color: 'text-purple-500',
+      description: 'Processamento de informação e foco'
+    },
+    { 
+      key: 'will', 
+      label: 'VONTADE', 
+      icon: BarChart3, 
+      color: 'text-orange-500',
+      description: 'Resiliência mental e inibição de impulsos'
+    },
+  ];
 
   return (
-    <div className="space-y-6">
-      <div className="flex gap-2">
-        <button 
-          onClick={() => setActiveTab('daily')} 
-          className={`flex-1 py-3 cut-corners border text-[10px] font-black uppercase italic ${activeTab === 'daily' ? 'border-cyan-400 text-cyan-400 bg-cyan-400/10' : 'border-white/5 opacity-50'}`}
-        >
-          DIÁRIOS
-        </button>
-        <button 
-          onClick={() => setActiveTab('intervention')} 
-          className={`flex-1 py-3 cut-corners border text-[10px] font-black uppercase italic ${activeTab === 'intervention' ? 'border-purple-500 text-purple-400 bg-purple-500/10' : 'border-white/5 opacity-50'}`}
-        >
-          ORDEM ESTRATÉGICA
-        </button>
+    <div className="space-y-6 animate-in fade-in slide-in-from-bottom duration-500">
+      <div className="flex items-center justify-between border-b border-cyan-400/20 pb-4">
+        <h2 className="system-font text-cyan-400 text-xl flex items-center gap-3 italic">
+          <Zap className="text-cyan-400" size={24} />
+          STATUS DA UNIDADE
+        </h2>
+        <div className="text-right">
+          <span className="text-[8px] text-gray-600 font-black uppercase tracking-widest">Pontos Livres</span>
+          <div className="text-[10px] text-cyan-500 font-black">{stats.unallocatedPoints}</div>
+        </div>
       </div>
 
+      {/* Barra de HP/Fadiga */}
       <div className="space-y-4">
-        {filtered.length === 0 ? (
-          <div className="py-20 text-center opacity-20">
-            <ShieldAlert className="mx-auto mb-4" />
-            <p className="text-[10px] uppercase font-black italic">AGUARDANDO ATUALIZAÇÃO DO ARQUITETO...</p>
+        <div className="system-panel cut-corners p-4">
+          <div className="flex justify-between items-center mb-2">
+            <div className="flex items-center gap-2">
+              <Heart size={14} className="text-red-500" />
+              <span className="text-[10px] font-black uppercase text-white">SAÚDE</span>
+            </div>
+            <span className="text-sm font-black text-white">{stats.hp}/{stats.maxHp}</span>
           </div>
-        ) : (
-          <>
-            {filtered.map(q => (
-              <div key={q.id} className={`system-panel cut-corners p-6 border-l-4 ${q.completed ? 'opacity-30 border-green-500' : q.type === 'intervention' ? 'border-purple-500' : 'border-cyan-400'}`}>
-                <div className="flex justify-between items-start mb-3">
-                  <h3 className="system-font text-xs font-black uppercase italic glow-text">{q.title}</h3>
-                  <div className="text-[9px] font-black text-cyan-500 flex items-center gap-1 bg-black/40 px-2 py-1 cut-corners">
-                    <Clock size={10} /> <QuestTimer deadline={q.deadline} />
-                  </div>
-                </div>
-                <p className="text-[10px] text-gray-500 uppercase italic leading-tight mb-4">{q.description}</p>
-                
-                <div className="space-y-1.5 mb-4">
-                  <div className="flex justify-between text-[8px] font-black text-gray-600 uppercase italic">
-                    <span>PROGRESSO</span>
-                    <span>{q.progress} / {q.target}</span>
-                  </div>
-                  <div className="h-1 bg-white/5 cut-corners overflow-hidden">
-                    <div className={`h-full transition-all duration-500 ${q.type === 'intervention' ? 'bg-purple-500' : 'bg-cyan-400'}`} style={{ width: `${(q.progress / q.target) * 100}%` }} />
-                  </div>
-                </div>
+          <div className="h-2 bg-white/5 cut-corners overflow-hidden">
+            <div className="h-full bg-red-500 transition-all duration-500" style={{ width: `${(stats.hp / stats.maxHp) * 100}%` }} />
+          </div>
+        </div>
 
-                <div className="flex justify-between items-center border-t border-white/5 pt-3">
-                  <div className="flex gap-4 text-[9px] font-black italic opacity-60">
-                    <div className="text-yellow-500">{q.goldReward}G</div>
-                    <div className="text-cyan-400">+{q.expReward} EXP</div>
-                  </div>
-                  {!q.completed && (
-                    q.progress >= q.target ? 
-                    <button onClick={() => onComplete(q.id)} className="bg-cyan-400 text-black px-4 py-2 text-[9px] font-black uppercase italic animate-pulse">COMPLETAR</button> :
-                    <button onClick={() => onProgress(q.id)} className="border border-cyan-400 text-cyan-400 p-2 rounded-full active:scale-90"><Plus size={14} /></button>
-                  )}
+        <div className="system-panel cut-corners p-4">
+          <div className="flex justify-between items-center mb-2">
+            <div className="flex items-center gap-2">
+              <Battery size={14} className="text-cyan-400" />
+              <span className="text-[10px] font-black uppercase text-white">FOCO</span>
+            </div>
+            <span className="text-sm font-black text-white">{stats.focusCapacity}/{stats.maxFocusCapacity}</span>
+          </div>
+          <div className="h-2 bg-white/5 cut-corners overflow-hidden">
+            <div className="h-full bg-cyan-400 transition-all duration-500" style={{ width: `${(stats.focusCapacity / stats.maxFocusCapacity) * 100}%` }} />
+          </div>
+        </div>
+
+        <div className="system-panel cut-corners p-4">
+          <div className="flex justify-between items-center mb-2">
+            <div className="flex items-center gap-2">
+              <Target size={14} className="text-yellow-500" />
+              <span className="text-[10px] font-black uppercase text-white">FADIGA</span>
+            </div>
+            <span className="text-sm font-black text-white">{stats.fatigue}%</span>
+          </div>
+          <div className="h-2 bg-white/5 cut-corners overflow-hidden">
+            <div className={`h-full transition-all duration-500 ${stats.fatigue < 50 ? 'bg-green-500' : stats.fatigue < 80 ? 'bg-yellow-500' : 'bg-red-500'}`} style={{ width: `${stats.fatigue}%` }} />
+          </div>
+        </div>
+      </div>
+
+      {/* Atributos */}
+      <div className="grid grid-cols-2 gap-4">
+        {statItems.map(({ key, label, icon: Icon, color, description }) => (
+          <div key={key} className="system-panel cut-corners p-4 border border-white/5">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <Icon size={16} className={color} />
+                <div>
+                  <div className={`text-[10px] font-black uppercase tracking-wider ${color}`}>{label}</div>
+                  <div className="text-[7px] text-gray-500 uppercase italic">{description}</div>
                 </div>
               </div>
-            ))}
-            
-            <div className="mt-8">
-              <ImmersiveAd section="quests" />
+              <span className="text-2xl font-black text-white glow-text">{stats[key as keyof Stats]}</span>
             </div>
-          </>
-        )}
+            
+            {stats.unallocatedPoints > 0 && (
+              <button
+                onClick={() => onAllocate(key)}
+                className="w-full bg-cyan-400/10 border border-cyan-400/30 text-cyan-400 text-[9px] font-black uppercase italic py-2 cut-corners hover:bg-cyan-400/20 transition-all active:scale-95"
+              >
+                EVOLUIR ATRIBUTO
+              </button>
+            )}
+          </div>
+        ))}
+      </div>
+
+      {/* Nível e EXP */}
+      <div className="system-panel cut-corners p-4 border-cyan-400/20 bg-cyan-400/5">
+        <div className="flex justify-between items-center mb-2">
+          <div className="flex items-center gap-2">
+            <Zap size={14} className="text-yellow-500" />
+            <span className="text-[9px] text-yellow-500 font-black uppercase">NÍVEL</span>
+          </div>
+          <span className="text-lg font-black text-white">{stats.level}</span>
+        </div>
+        <div className="h-2 bg-white/5 cut-corners overflow-hidden">
+          <div className="h-full bg-yellow-500 transition-all duration-500" style={{ width: `${(stats.exp / stats.maxExp) * 100}%` }} />
+        </div>
+        <div className="flex justify-between text-[8px] text-gray-500 font-black uppercase mt-1">
+          <span>EXP: {stats.exp}</span>
+          <span>PRÓXIMO: {stats.maxExp}</span>
+        </div>
+      </div>
+
+      {/* Informações adicionais */}
+      <div className="grid grid-cols-2 gap-3">
+        <div className="system-panel cut-corners p-3 text-center">
+          <div className="text-[8px] text-gray-600 font-black uppercase">GOLD</div>
+          <div className="text-lg font-black text-yellow-500">{stats.gold.toLocaleString()}</div>
+        </div>
+        <div className="system-panel cut-corners p-3 text-center">
+          <div className="text-[8px] text-gray-600 font-black uppercase">MISSÕES FALHADAS</div>
+          <div className="text-lg font-black text-red-500">{stats.failedMissionsCount}</div>
+        </div>
+      </div>
+
+      {/* Nota do sistema */}
+      <div className="system-panel cut-corners p-4 border-cyan-500/20 bg-cyan-500/5">
+        <p className="text-[10px] text-gray-500 font-bold uppercase italic leading-tight">
+          [SISTEMA] Atributos aumentam através de treinamento real. Clique em "EVOLUIR ATRIBUTO" para iniciar protocolo de teste.
+        </p>
       </div>
     </div>
   );
 };
 
-export default QuestWindow;
+export default StatusWindow;
