@@ -1,6 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
+import './index.css';
 
 // Remove tela de loading antes de renderizar
 const loading = document.getElementById('loading');
