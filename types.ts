@@ -1,7 +1,5 @@
-
 export interface Stats {
   playerName: string;
-  
   age: number;
   goal: string;
   customGoal?: string;
@@ -53,16 +51,6 @@ export interface AvailableItem {
   icon: string;
 }
 
-export interface ResourceItem {
-  id: string;
-  name: string;
-  category: string;
-  description: string;
-  isIntegrated: boolean;
-  icon: string;
-  bonus: string;
-}
-
 export type QuestCategory = 'FÍSICO' | 'RECUPERAÇÃO' | 'COGNITIVO' | 'CONTROLE' | 'BIOHACKING' | 'SOCIAL';
 
 export interface Quest {
@@ -75,7 +63,7 @@ export interface Quest {
   type: 'daily' | 'intervention' | 'secret' | 'penalty' | 'emergency';
   category: QuestCategory;
   completed: boolean;
-  deadline: string; // ISO string
+  deadline: string;
   reward: string;
   goldReward: number;
   expReward: number;
@@ -107,6 +95,7 @@ export interface Skill {
 export type SystemTab = 'STATUS' | 'PROTOCOLS' | 'SKILLS' | 'INVENTORY' | 'REGISTRY' | 'CHAT';
 
 export function calculateRank(level: number): string {
+  if (!level) return 'E';
   if (level >= 95) return 'S';
   if (level >= 80) return 'A';
   if (level >= 60) return 'B';
@@ -116,6 +105,7 @@ export function calculateRank(level: number): string {
 }
 
 export function getJobTitle(level: number): string {
+  if (!level) return 'Humano em Avaliação';
   if (level >= 50) return 'Monarca da Ordem';
   if (level >= 30) return 'Otimizador de Elite';
   if (level >= 15) return 'Desperto do Fluxo';
@@ -153,24 +143,6 @@ export const INITIAL_STATS: Stats = {
   systemMode: 'architect',
   avatar: '👤'
 };
-export interface CustomQuestData {
-  title: string;
-  description: string;
-  category: QuestCategory;
-  target: number;
-  reward: string;
-  deadlineDays: number;
-}
-
-export interface CustomSkillData {
-  name: string;
-  description: string;
-  type: 'COGNITIVA' | 'MOTORA' | 'SOCIAL' | 'ESTRATÉGICA';
-  testTask: string;
-  testTarget: number;
-  testUnit: string;
-}
-// ADICIONE ESTAS INTERFACES no final do arquivo types.ts (antes do último }):
 
 export interface CustomQuestData {
   title: string;
@@ -189,7 +161,3 @@ export interface CustomSkillData {
   testTarget: number;
   testUnit: string;
 }
-
-
-
-

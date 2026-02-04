@@ -139,39 +139,6 @@ body {
   animation: fadeIn 0.3s ease-out;
 }
 
-/* Anúncios imersivos */
-.ad-container {
-  background: rgba(6, 26, 35, 0.9);
-  border: 1px solid rgba(0, 229, 255, 0.2);
-  backdrop-filter: blur(10px);
-  margin: 20px 0;
-  padding: 15px;
-  border-radius: 8px;
-  position: relative;
-  overflow: hidden;
-  opacity: 0;
-  transform: translateY(20px);
-  transition: opacity 0.5s ease, transform 0.5s ease;
-}
-
-.ad-container.visible {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-.ad-container::before {
-  content: "PUBLICIDADE DO SISTEMA";
-  position: absolute;
-  top: 5px;
-  left: 10px;
-  font-size: 8px;
-  color: rgba(0, 229, 255, 0.5);
-  font-family: 'Orbitron', sans-serif;
-  font-weight: 700;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-}
-
 /* Utilitários extras */
 @keyframes pulse {
   0%, 100% {
@@ -184,4 +151,30 @@ body {
 
 .animate-pulse {
   animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-25%);
+  }
+}
+
+.animate-bounce {
+  animation: bounce 0.5s infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
 }
