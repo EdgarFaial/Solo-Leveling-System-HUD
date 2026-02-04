@@ -10,6 +10,13 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     sourcemap: false,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom', 'lucide-react'],
+        },
+      },
+    },
   },
   optimizeDeps: {
     include: ['react', 'react-dom', 'lucide-react'],

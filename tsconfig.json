@@ -16,10 +16,15 @@
     "allowJs": true,
     "jsx": "react-jsx",
     "allowImportingTsExtensions": true,
-    "noEmit": true
+    "noEmit": true,
+    "types": ["node"]
   },
   "include": [
     "**/*.ts",
-    "**/*.tsx"
-, "tailwind.config.js"  ]
+    "**/*.tsx",
+    "**/*.js",
+    "**/*.jsx",
+    "tailwind.config.js",
+    "postcss.config.js"
+  ]
 }
