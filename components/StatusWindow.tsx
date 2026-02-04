@@ -10,6 +10,16 @@ interface StatusWindowProps {
 type StatKey = 'strength' | 'agility' | 'vitality' | 'sense' | 'intelligence' | 'will';
 
 const StatusWindow: React.FC<StatusWindowProps> = ({ stats, onAllocate }) => {
+  // Verificação de segurança
+  if (!stats) {
+    console.error("❌ StatusWindow: stats é undefined!");
+    return (
+      <div className="system-panel cut-corners p-8 text-center">
+        <p className="text-red-500 font-black uppercase">ERRO: Dados do status não disponíveis</p>
+      </div>
+    );
+  }
+
   const statItems: Array<{
     key: StatKey;
     label: string;
@@ -70,7 +80,7 @@ const StatusWindow: React.FC<StatusWindowProps> = ({ stats, onAllocate }) => {
         </h2>
         <div className="text-right">
           <span className="text-[8px] text-gray-600 font-black uppercase tracking-widest">Pontos Livres</span>
-          <div className="text-[10px] text-cyan-500 font-black">{stats.unallocatedPoints}</div>
+          <div className="text-[10px] text-cyan-500 font-black">{stats.unallocatedPoints || 0}</div>
         </div>
       </div>
 
@@ -82,10 +92,10 @@ const StatusWindow: React.FC<StatusWindowProps> = ({ stats, onAllocate }) => {
               <Heart size={14} className="text-red-500" />
               <span className="text-[10px] font-black uppercase text-white">SAÚDE</span>
             </div>
-            <span className="text-sm font-black text-white">{stats.hp}/{stats.maxHp}</span>
+            <span className="text-sm font-black text-white">{(stats.hp || 0)}/{(stats.maxHp || 100)}</span>
           </div>
           <div className="h-2 bg-white/5 cut-corners overflow-hidden">
-            <div className="h-full bg-red-500 transition-all duration-500" style={{ width: `${(stats.hp / stats.maxHp) * 100}%` }} />
+            <div className="h-full bg-red-500 transition-all duration-500" style={{ width: `${((stats.hp || 0) / (stats.maxHp || 100)) * 100}%` }} />
           </div>
         </div>
 
@@ -95,10 +105,10 @@ const StatusWindow: React.FC<StatusWindowProps> = ({ stats, onAllocate }) => {
               <Battery size={14} className="text-cyan-400" />
               <span className="text-[10px] font-black uppercase text-white">FOCO</span>
             </div>
-            <span className="text-sm font-black text-white">{stats.focusCapacity}/{stats.maxFocusCapacity}</span>
+            <span className="text-sm font-black text-white">{(stats.focusCapacity || 0)}/{(stats.maxFocusCapacity || 100)}</span>
           </div>
           <div className="h-2 bg-white/5 cut-corners overflow-hidden">
-            <div className="h-full bg-cyan-400 transition-all duration-500" style={{ width: `${(stats.focusCapacity / stats.maxFocusCapacity) * 100}%` }} />
+            <div className="h-full bg-cyan-400 transition-all duration-500" style={{ width: `${((stats.focusCapacity || 0) / (stats.maxFocusCapacity || 100)) * 100}%` }} />
           </div>
         </div>
 
@@ -108,10 +118,10 @@ const StatusWindow: React.FC<StatusWindowProps> = ({ stats, onAllocate }) => {
               <Target size={14} className="text-yellow-500" />
               <span className="text-[10px] font-black uppercase text-white">FADIGA</span>
             </div>
-            <span className="text-sm font-black text-white">{stats.fatigue}%</span>
+            <span className="text-sm font-black text-white">{(stats.fatigue || 0)}%</span>
           </div>
           <div className="h-2 bg-white/5 cut-corners overflow-hidden">
-            <div className={`h-full transition-all duration-500 ${stats.fatigue < 50 ? 'bg-green-500' : stats.fatigue < 80 ? 'bg-yellow-500' : 'bg-red-500'}`} style={{ width: `${stats.fatigue}%` }} />
+            <div className={`h-full transition-all duration-500 ${(stats.fatigue || 0) < 50 ? 'bg-green-500' : (stats.fatigue || 0) < 80 ? 'bg-yellow-500' : 'bg-red-500'}`} style={{ width: `${stats.fatigue || 0}%` }} />
           </div>
         </div>
       </div>
@@ -128,10 +138,10 @@ const StatusWindow: React.FC<StatusWindowProps> = ({ stats, onAllocate }) => {
                   <div className="text-[7px] text-gray-500 uppercase italic">{description}</div>
                 </div>
               </div>
-              <span className="text-2xl font-black text-white glow-text">{stats[key]}</span>
+              <span className="text-2xl font-black text-white glow-text">{stats[key] || 0}</span>
             </div>
             
-            {stats.unallocatedPoints > 0 && (
+            {(stats.unallocatedPoints || 0) > 0 && (
               <button
                 onClick={() => onAllocate(key)}
                 className="w-full bg-cyan-400/10 border border-cyan-400/30 text-cyan-400 text-[9px] font-black uppercase italic py-2 cut-corners hover:bg-cyan-400/20 transition-all active:scale-95"
@@ -150,14 +160,14 @@ const StatusWindow: React.FC<StatusWindowProps> = ({ stats, onAllocate }) => {
             <Zap size={14} className="text-yellow-500" />
             <span className="text-[9px] text-yellow-500 font-black uppercase">NÍVEL</span>
           </div>
-          <span className="text-lg font-black text-white">{stats.level}</span>
+          <span className="text-lg font-black text-white">{stats.level || 1}</span>
         </div>
         <div className="h-2 bg-white/5 cut-corners overflow-hidden">
-          <div className="h-full bg-yellow-500 transition-all duration-500" style={{ width: `${(stats.exp / stats.maxExp) * 100}%` }} />
+          <div className="h-full bg-yellow-500 transition-all duration-500" style={{ width: `${((stats.exp || 0) / (stats.maxExp || 100)) * 100}%` }} />
         </div>
         <div className="flex justify-between text-[8px] text-gray-500 font-black uppercase mt-1">
-          <span>EXP: {stats.exp}</span>
-          <span>PRÓXIMO: {stats.maxExp}</span>
+          <span>EXP: {stats.exp || 0}</span>
+          <span>PRÓXIMO: {stats.maxExp || 100}</span>
         </div>
       </div>
 
@@ -165,11 +175,11 @@ const StatusWindow: React.FC<StatusWindowProps> = ({ stats, onAllocate }) => {
       <div className="grid grid-cols-2 gap-3">
         <div className="system-panel cut-corners p-3 text-center">
           <div className="text-[8px] text-gray-600 font-black uppercase">GOLD</div>
-          <div className="text-lg font-black text-yellow-500">{stats.gold.toLocaleString()}</div>
+          <div className="text-lg font-black text-yellow-500">{(stats.gold || 0).toLocaleString()}</div>
         </div>
         <div className="system-panel cut-corners p-3 text-center">
           <div className="text-[8px] text-gray-600 font-black uppercase">MISSÕES FALHADAS</div>
-          <div className="text-lg font-black text-red-500">{stats.failedMissionsCount}</div>
+          <div className="text-lg font-black text-red-500">{stats.failedMissionsCount || 0}</div>
         </div>
       </div>
 

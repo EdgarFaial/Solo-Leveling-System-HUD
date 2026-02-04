@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, Cpu, User } from 'lucide-react';
 import { Stats } from '../types';
@@ -9,6 +8,15 @@ interface ArchitectChatProps {
 }
 
 const ArchitectChat: React.FC<ArchitectChatProps> = ({ stats }) => {
+  // Verificação de segurança
+  if (!stats) {
+    return (
+      <div className="system-panel cut-corners p-8 text-center">
+        <p className="text-red-500 font-black uppercase">ERRO: Dados do status não disponíveis</p>
+      </div>
+    );
+  }
+
   const [messages, setMessages] = useState<{role: 'architect' | 'user', text: string}[]>([
     { role: 'architect', text: "UNIDADE VINCULADA. AGUARDANDO COMANDOS DE PROTOCOLO." }
   ]);
@@ -22,16 +30,26 @@ const ArchitectChat: React.FC<ArchitectChatProps> = ({ stats }) => {
 
   const handleSend = async () => {
     if (!input.trim() || loading) return;
+    
     const userMsg = input;
     setInput("");
     setMessages(prev => [...prev, { role: 'user', text: userMsg }]);
     setLoading(true);
 
-    const history = messages.map(m => ({ role: m.role, text: m.text }));
-    const response = await chatWithArchitect(stats, userMsg, history);
-    
-    setMessages(prev => [...prev, { role: 'architect', text: response }]);
-    setLoading(false);
+    try {
+      const history = messages.map(m => ({ role: m.role, text: m.text }));
+      const response = await chatWithArchitect(stats, userMsg, history);
+      
+      setMessages(prev => [...prev, { role: 'architect', text: response }]);
+    } catch (error) {
+      console.error("Erro no chat:", error);
+      setMessages(prev => [...prev, { 
+        role: 'architect', 
+        text: "ERRO: Não foi possível conectar ao Arquiteto. Verifique sua conexão ou chave API." 
+      }]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
