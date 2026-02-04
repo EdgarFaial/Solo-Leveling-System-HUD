@@ -49,23 +49,18 @@
   </script>
   
   <!-- CSS personalizado -->
-  <link rel="stylesheet" href="/index.css">
   <style>
-    :root {
-      --system-blue: #00e5ff;
-      --system-blue-glow: rgba(0, 229, 255, 0.6);
-      --bg-deep: #02060a;
-      --panel-bg: rgba(6, 26, 35, 0.85);
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
     }
-    
-    body {
+
+    body, html {
       margin: 0;
       padding: 0;
-      background-color: var(--bg-deep);
-      color: #e2e8f0;
-      font-family: 'Rajdhani', sans-serif;
-      height: 100vh;
-      width: 100vw;
+      width: 100%;
+      height: 100%;
+      background: #02060a;
       overflow: hidden;
     }
 
@@ -97,13 +92,13 @@
     }
 
     .system-panel {
-      background: var(--panel-bg);
+      background: rgba(6, 26, 35, 0.85);
       backdrop-filter: blur(15px);
       border: 1px solid rgba(0, 229, 255, 0.2);
     }
 
     .glow-text {
-      text-shadow: 0 0 10px var(--system-blue-glow);
+      text-shadow: 0 0 10px rgba(0, 229, 255, 0.6);
     }
 
     /* Loading screen */
@@ -119,7 +114,7 @@
       transition: opacity 0.3s ease;
     }
 
-    /* Scrollbar imersiva para desktop */
+    /* Scrollbar */
     .no-scrollbar::-webkit-scrollbar { 
       width: 4px; 
     }
@@ -127,9 +122,8 @@
       background: transparent; 
     }
     .no-scrollbar::-webkit-scrollbar-thumb { 
-      background: var(--system-blue); 
+      background: rgba(0, 229, 255, 0.3); 
       border-radius: 10px; 
-      opacity: 0.2; 
     }
     
     @media (max-width: 640px) {
@@ -140,6 +134,16 @@
       .no-scrollbar::-webkit-scrollbar { 
         display: none; 
       }
+    }
+
+    /* Animações */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .animate-in {
+      animation: fadeIn 0.3s ease-out;
     }
   </style>
 </head>
@@ -155,7 +159,7 @@
   <!-- Anúncios -->
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6403370988033052" crossorigin="anonymous"></script>
   
-  <script type="module" src="/index.tsx"></script>
+  <script type="module" src="/src/index.tsx"></script>
   
   <script>
     // Remove tela de loading quando a página carregar
