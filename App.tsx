@@ -9,15 +9,7 @@ import {
 import { Stats, Quest, Skill, SystemTab, calculateRank, INITIAL_STATS, Item, AvailableItem, CustomQuestData, CustomSkillData, QuestCategory } from './types';
 import { generateDailyQuests, generateObjectiveBatch, fillSkillPool, chatWithArchitect } from './services/geminiService';
 
-// Componente seguro que previne erros
-const SafeComponent = ({ children, fallback = null }: { children: React.ReactNode, fallback?: React.ReactNode }) => {
-  try {
-    return <>{children}</>;
-  } catch (error) {
-    console.error('Component error:', error);
-    return <>{fallback || <div className="p-4 text-red-500 text-xs">Erro ao renderizar componente</div>}</>;
-  }
-};
+
 
 // Componentes básicos inline para simplificar
 const StatusWindow: React.FC<{ stats: Stats; onAllocate: (statKey: keyof Stats) => void }> = ({ stats, onAllocate }) => {
@@ -1587,15 +1579,13 @@ const App: React.FC = () => {
       </SafeComponent>
 
       {/* Modals */}
-      {showProfile && <ProfileWindow stats={stats} onSave={(u) => setStats(s => ({...s, ...u}))} onClose={() => setShowProfile(false)} />}
-      {notification && <SystemDialog message={notification.msg} type={notification.type} onClose={() => setNotification(null)} />}
-      {trainingStat && <TrainingModal 
+           {trainingStat && <TrainingModal 
         statKey={trainingStat} 
-        currentValue={stats[trainingStat] || 0} 
+        currentValue={Number(stats[trainingStat]) || 0} // LINHA 1594 CORRIGIDA
         onSuccess={() => { 
           setStats(s => ({
             ...s, 
-            [trainingStat]: (s[trainingStat] || 0) + 1, 
+            [trainingStat]: (Number(s[trainingStat]) || 0) + 1, // LINHA 1598 CORRIGIDA
             unallocatedPoints: (s.unallocatedPoints || 0) - 1
           })); 
           setTrainingStat(null); 

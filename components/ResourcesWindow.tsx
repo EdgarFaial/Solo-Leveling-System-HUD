@@ -1,7 +1,16 @@
-
 import React from 'react';
-import { ResourceItem } from '../types';
 import { CheckCircle, Shield, Zap, Box, Circle } from 'lucide-react';
+
+// Interface local se ResourceItem não existe em types.ts
+interface ResourceItem {
+  id: string;
+  name: string;
+  category: string;
+  description: string;
+  isIntegrated: boolean;
+  icon: string;
+  bonus: string;
+}
 
 interface ResourcesWindowProps {
   resources: ResourceItem[];
