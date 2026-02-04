@@ -51,6 +51,17 @@ export interface AvailableItem {
   icon: string;
 }
 
+// ADICIONE ESTA INTERFACE SE PRECISAR DO ResourcesWindow
+export interface ResourceItem {
+  id: string;
+  name: string;
+  category: string;
+  description: string;
+  isIntegrated: boolean;
+  icon: string;
+  bonus: string;
+}
+
 export type QuestCategory = 'FÍSICO' | 'RECUPERAÇÃO' | 'COGNITIVO' | 'CONTROLE' | 'BIOHACKING' | 'SOCIAL';
 
 export interface Quest {
