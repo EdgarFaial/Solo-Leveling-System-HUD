@@ -7,8 +7,16 @@ interface StatusWindowProps {
   onAllocate: (statKey: keyof Stats) => void;
 }
 
+type StatKey = 'strength' | 'agility' | 'vitality' | 'sense' | 'intelligence' | 'will';
+
 const StatusWindow: React.FC<StatusWindowProps> = ({ stats, onAllocate }) => {
-  const statItems = [
+  const statItems: Array<{
+    key: StatKey;
+    label: string;
+    icon: any;
+    color: string;
+    description: string;
+  }> = [
     { 
       key: 'strength', 
       label: 'FORÇA', 
@@ -120,7 +128,7 @@ const StatusWindow: React.FC<StatusWindowProps> = ({ stats, onAllocate }) => {
                   <div className="text-[7px] text-gray-500 uppercase italic">{description}</div>
                 </div>
               </div>
-              <span className="text-2xl font-black text-white glow-text">{stats[key as keyof Stats]}</span>
+              <span className="text-2xl font-black text-white glow-text">{stats[key]}</span>
             </div>
             
             {stats.unallocatedPoints > 0 && (
